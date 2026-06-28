@@ -40,19 +40,7 @@ const programs = [
   },
 ];
 
-const timeline = [
-  { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe limousine đưa bạn đến bến xe. Người của chúng tôi đón tại bến.', icon: 'bus' },
-  { time: '06:30', title: 'Ăn sáng', desc: 'Phở vịt quay Cao Bằng — quán Lâm, ngay cạnh bến xe. Được locals chọn.', icon: 'utensils', image: 'images/Food/breakfast.jpg' },
-  { time: '07:15', title: 'Nhận xe máy', desc: 'Honda Wave 110 hoặc Winner X. Đã kiểm tra, đầy bình xăng, kèm áo mưa.', icon: 'bike', image: 'images/bikes/wave-alpha.jpg' },
-  { time: '07:30', title: 'Khởi hành đi Bản Giốc', desc: '85km đường đẹp nhất Việt Nam. Đường tốt, ít xe, cảnh núi đá vôi hai bên.', icon: 'road' },
-  { time: '09:30', title: 'Thác Bản Giốc', desc: 'Góc chụp đẹp nhất lúc sáng — ánh nắng chiếu xiên, ít khách. Dành 1.5 tiếng.', icon: 'camera', image: 'images/places/ban-gioc.jpg' },
-  { time: '11:00', title: 'Động Ngườm Ngao', desc: '15 phút từ thác. Hang động tuyệt đẹp, mát lạnh, tour 45 phút.', icon: 'mountain', image: 'images/places/nguom-ngao.jpg' },
-  { time: '12:00', title: 'Ăn trưa bản địa', desc: 'Cơm lam, gà nướng, rau rừng. Quán nhà sàn nhìn ra ruộng bậc thang.', icon: 'utensils' },
-  { time: '14:00', title: 'Làng đá Khuổi Ky', desc: 'Bản làng 400 tuổi. Nhà đá xám, suối trong. Thời gian dừng: 45 phút.', icon: 'home', image: 'images/places/stone-village.jpg' },
-  { time: '15:30', title: 'Cafe & nghỉ ngơi', desc: 'Cafe Bo Bản Giốc — view thác từ xa, hammock, wifi. Nghỉ 30 phút.', icon: 'coffee' },
-  { time: '17:00', title: 'Check-in homestay', desc: 'Homestay sàn gỗ, chăn ấm, view núi. Đồ đã gửi từ sáng, phòng sẵn sàng.', icon: 'home', image: 'images/homestay.jpg' },
-  { time: '19:00', title: 'Ăn tối & nghỉ ngơi', desc: 'Lẩu gà đen, lạp sườn, rượu ngô. Bếp lửa, trời sao.', icon: 'utensils' },
-];
+
 
 const includes = [
   { icon: 'bus', title: 'Vé xe khách', desc: 'Limousine Hà Nội — Cao Bằng khứ hồi' },
@@ -99,7 +87,6 @@ const gallery = [
     </a>
     <div class="nav-links" id="navLinks">
       <a href="#programs">Chương trình</a>
-      <a href="#timeline">Lịch trình</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
       <a href={ZALO_LINK} class="btn btn-zalo nav-cta" target="_blank" rel="noopener">
@@ -116,7 +103,6 @@ const gallery = [
 <!-- ═══════ MOBILE MENU ═══════ -->
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
   <a href="#programs" class="mobile-menu-link">Chương trình</a>
-  <a href="#timeline" class="mobile-menu-link">Lịch trình</a>
   <a href="#includes" class="mobile-menu-link">Bao gồm</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
   <a href={ZALO_LINK} class="btn btn-zalo mobile-menu-cta" target="_blank" rel="noopener">
@@ -232,46 +218,12 @@ const gallery = [
                 </li>
               ))}
             </ul>
-            <a href={ZALO_LINK} class={`btn ${p.featured ? 'btn-primary' : 'btn-outline'} program-cta`} target="_blank" rel="noopener">
-              Chọn chương trình này
+            <a href={`${import.meta.env.BASE_URL}programs/${p.id}/`} class={`btn ${p.featured ? 'btn-primary' : 'btn-outline'} program-cta`}>
+              Xem chi tiết lịch trình
             </a>
           </div>
         </div>
       ))}
-    </div>
-  </div>
-</section>
-
-<!-- ═══════ TIMELINE ═══════ -->
-<section id="timeline" class="section-pad">
-  <div class="wrap">
-    <div class="section-header reveal">
-      <h2>Một ngày ở Cao Bằng<br/>trông như thế nào?</h2>
-      <p class="section-sub">Đây là Ngày 1 trong chương trình 3N2Đ — mọi thứ đã được tính toán: thời gian, quãng đường, quán ăn, góc chụp.</p>
-    </div>
-    <div class="timeline">
-      <div class="timeline-line"></div>
-      {timeline.map((item, i) => (
-        <div class="timeline-item reveal" style={`--i: ${i}`}>
-          <div class="timeline-marker">
-            <div class="timeline-dot"></div>
-            <span class="timeline-time">{item.time}</span>
-          </div>
-          <div class="timeline-content">
-            <h3 class="timeline-title">{item.title}</h3>
-            <p class="timeline-desc">{item.desc}</p>
-            {item.image && (
-              <div class="timeline-img-wrapper">
-                <img src={item.image} alt={item.title} class="timeline-img" loading="lazy" />
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-    <div class="timeline-cta reveal">
-      <p>Đây mới chỉ là Ngày 1. Chương trình 3N2Đ có <strong>30+ hoạt động</strong> được thiết kế tương tự.</p>
-      <a href={ZALO_LINK} class="btn btn-primary" target="_blank" rel="noopener">Xem đầy đủ — Nhắn Zalo</a>
     </div>
   </div>
 </section>
@@ -455,7 +407,6 @@ const gallery = [
     </div>
     <div class="footer-links">
       <a href="#programs">Chương trình</a>
-      <a href="#timeline">Lịch trình</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
     </div>
