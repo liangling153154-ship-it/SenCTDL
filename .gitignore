@@ -1,0 +1,16 @@
+# Reference directories
+SEN WEB OTA - test clone vn/
+
+# Astro node modules and build output
+web/node_modules/
+web/.astro/
+web/dist/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# System tasks/logs (Antigravity/Claude logs)
+.gemini/
+.agents/skills/impeccable/temp/
+*.log
