@@ -116,12 +116,21 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 <section id="hero">
   <div class="hero-bg">
     <img
-      src="images/hero/hero-main.jpg"
+      src={`${base}images/hero/hero-main.jpg`}
       alt="Cảnh núi đá vôi và ruộng bậc thang ở Cao Bằng, Việt Nam"
-      class="hero-photo"
+      class="hero-photo desktop-only"
       loading="eager"
       fetchpriority="high"
     />
+    <video
+      autoplay
+      loop
+      muted
+      playsinline
+      class="hero-video mobile-only"
+    >
+      <source src={`${base}images/hero/hero.mp4`} type="video/mp4" />
+    </video>
     <div class="hero-overlay"></div>
     <div class="hero-fade"></div>
   </div>
@@ -553,14 +562,38 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   position: absolute;
   inset: 0;
 }
-.hero-photo {
+.hero-photo, .hero-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.hero-photo {
   transform: scale(1.05);
   transition: transform 12s var(--ease-out);
 }
 .hero-photo.loaded { transform: scale(1); }
+
+/* Responsive display logic */
+.hero-video.mobile-only {
+  display: none;
+}
+.hero-photo.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hero-video.mobile-only {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero-photo.desktop-only {
+    display: none;
+  }
+}
 .hero-overlay {
   position: absolute;
   inset: 0;
