@@ -71,6 +71,8 @@ const gallery = [
   { src: 'images/gallery-05.JPG', alt: 'Làng đá cổ Khuổi Ky của người Tày' },
   { src: 'images/gallery-06.JPG', alt: 'Hồ Thang Hen xanh ngọc bích phẳng lặng giữa lòng thung lũng' },
 ];
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 ---
 
 <Base
@@ -218,7 +220,7 @@ const gallery = [
                 </li>
               ))}
             </ul>
-            <a href={`${import.meta.env.BASE_URL}programs/${p.id}/`} class={`btn ${p.featured ? 'btn-primary' : 'btn-outline'} program-cta`}>
+            <a href={`${base}programs/${p.id}/`} class={`btn ${p.featured ? 'btn-primary' : 'btn-outline'} program-cta`}>
               Xem chi tiết lịch trình
             </a>
           </div>

@@ -11,7 +11,7 @@ export function getStaticPaths() {
 
 const { program } = Astro.props;
 const ZALO_LINK = 'https://zalo.me/0123456789';
-const base_path = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 ---
 
 <Base
@@ -22,7 +22,7 @@ const base_path = import.meta.env.BASE_URL;
 <!-- ═══════ HEADER / NAV ═══════ -->
 <nav id="detailNav">
   <div class="nav-inner">
-    <a href={base_path} class="nav-back">
+    <a href={base} class="nav-back">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       <span>Trang chủ</span>
     </a>
@@ -34,7 +34,7 @@ const base_path = import.meta.env.BASE_URL;
 <!-- ═══════ HERO BANNER ═══════ -->
 <header class="detail-hero">
   <div class="detail-hero-bg">
-    <img src={`${base_path}${program.image}`} alt={program.name} class="detail-hero-img" />
+    <img src={`${base}${program.image}`} alt={program.name} class="detail-hero-img" />
     <div class="detail-hero-overlay"></div>
   </div>
   <div class="wrap detail-hero-content">
@@ -119,7 +119,7 @@ const base_path = import.meta.env.BASE_URL;
               </ul>
             </div>
             <div class="panel-visual">
-              <img src={`${base_path}${program.busInfo.image}`} alt={program.busInfo.title} />
+              <img src={`${base}${program.busInfo.image}`} alt={program.busInfo.title} />
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@ const base_path = import.meta.env.BASE_URL;
               </ul>
             </div>
             <div class="panel-visual">
-              <img src={`${base_path}${program.motorbikeInfo.image}`} alt={program.motorbikeInfo.title} />
+              <img src={`${base}${program.motorbikeInfo.image}`} alt={program.motorbikeInfo.title} />
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ const base_path = import.meta.env.BASE_URL;
               </ul>
             </div>
             <div class="panel-visual">
-              <img src={`${base_path}${program.homestayInfo.image}`} alt={program.homestayInfo.title} />
+              <img src={`${base}${program.homestayInfo.image}`} alt={program.homestayInfo.title} />
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ const base_path = import.meta.env.BASE_URL;
               </ul>
             </div>
             <div class="panel-visual">
-              <img src={`${base_path}${program.night1Info.image}`} alt={program.night1Info.title} />
+              <img src={`${base}${program.night1Info.image}`} alt={program.night1Info.title} />
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ const base_path = import.meta.env.BASE_URL;
                   <p class="timeline-desc">{act.desc}</p>
                   {act.image && (
                     <div class="timeline-img-wrapper">
-                      <img src={`${base_path}${act.image}`} alt={act.title} class="timeline-img" loading="lazy" />
+                      <img src={`${base}${act.image}`} alt={act.title} class="timeline-img" loading="lazy" />
                     </div>
                   )}
                 </div>
@@ -233,7 +233,7 @@ const base_path = import.meta.env.BASE_URL;
       <a href={ZALO_LINK} class="btn btn-primary btn-lg" target="_blank" rel="noopener">
         Nhắn Zalo — Đặt {program.name}
       </a>
-      <a href={base_path} class="btn btn-outline hero-btn-outline btn-lg">Quay lại trang chủ</a>
+      <a href={base} class="btn btn-outline hero-btn-outline btn-lg">Quay lại trang chủ</a>
     </div>
   </div>
 </section>
