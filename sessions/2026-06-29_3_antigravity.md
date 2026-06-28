@@ -22,8 +22,10 @@
 - [x] Tinh chỉnh trang chủ [index.astro](file:///C:/Users/Administrator/Desktop/PROJECT/ĐIỀU HÀNH DU LỊCH/web/src/pages/index.astro):
   - Xóa bỏ section Timeline chi tiết của gói 3N2Đ (đã chuyển sang trang chi tiết).
   - Loại bỏ các đường dẫn menu Lịch trình dư thừa.
-  - Cập nhật nút bấm trên các Program Cards để điều hướng về `{import.meta.env.BASE_URL}programs/{id}/`.
+  - Chuyển đổi thẻ bao ngoài các Program Cards từ `div` thành thẻ liên kết `a` để toàn bộ thẻ đều clickable, đổi nút CTA lồng nhau thành `span`.
+  - Tích hợp video nền tự động lặp (`hero.mp4`) cho khung hình di động (mobile) và giữ nguyên ảnh nền tĩnh (`hero-main.jpg`) cho máy tính (desktop) bằng CSS media queries.
 - [x] Cập nhật đường dẫn favicon trong [Base.astro](file:///C:/Users/Administrator/Desktop/PROJECT/ĐIỀU HÀNH DU LỊCH/web/src/layouts/Base.astro) sang tương đối (`favicon.svg`) để tương thích với GitHub Pages.
+- [x] Sao chép tệp video `hero.mp4` từ thư mục clone vào thư mục tài nguyên tĩnh `web/public/images/hero/`.
 - [x] Thử nghiệm build tĩnh dự án thành công ra 4 trang HTML chính.
 - [x] Commit và push toàn bộ mã nguồn lên nhánh `main` của repo GitHub.
 
