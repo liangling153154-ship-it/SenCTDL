@@ -2,9 +2,9 @@
 SEN WEB OTA - test clone vn/
 
 # Astro node modules and build output
-web/node_modules/
-web/.astro/
-web/dist/
+node_modules/
+.astro/
+dist/
 
 # OS specific files
 .DS_Store
@@ -14,3 +14,4 @@ Thumbs.db
 .gemini/
 .agents/skills/impeccable/temp/
 *.log
+node_modules
