@@ -1,0 +1,1426 @@
+---
+import Base from '../layouts/Base.astro';
+import { LIBRARY, KM, ROADS_SVG } from '../data/itineraryData';
+
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+---
+
+<Base
+  title="Công cụ Thiết kế Lịch trình — Sen's Homestay (Cao Bằng)"
+  description="Công cụ thiết kế lịch trình du lịch Cao Bằng nội bộ. Tạo lịch trình, ghi chú và xuất bản chi tiết."
+>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="builder-header">
+  <div class="hdr-left">
+    <a href={base} class="back-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <span>Trang chủ</span>
+    </a>
+    <span class="divider">/</span>
+    <h1>Sen's Homestay Planner</h1>
+    <span class="badge">Công cụ nội bộ</span>
+  </div>
+  <div class="hdr-right">
+    <button class="btn btn-outline" id="btn-clear-all">Xóa hết</button>
+    <button class="btn btn-primary" id="btn-export">Xuất kết quả</button>
+  </div>
+</header>
+
+<!-- ═══════ MAIN WORKSPACE ═══════ -->
+<main class="builder-workspace">
+
+  <!-- ── CỘT 1: THƯ VIỆN ĐIỂM ĐẾN (LEFT) ── -->
+  <section class="panel library-panel">
+    <div class="panel-header">
+      <h2>Thư viện Điểm đến</h2>
+      <p class="panel-desc">Click vào dấu "+" để thêm vào ngày đang chọn</p>
+      
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="spot-search" placeholder="Tìm địa điểm..." />
+      </div>
+
+      <!-- Categories Filter -->
+      <div class="filter-bar" id="category-filters">
+        <button class="filter-chip active" data-cat="all">Tất cả</button>
+        <button class="filter-chip" data-cat="nature">Thiên nhiên</button>
+        <button class="filter-chip" data-cat="craft">Làng nghề</button>
+        <button class="filter-chip" data-cat="culture">Văn hóa</button>
+        <button class="filter-chip" data-cat="history">Lịch sử</button>
+        <button class="filter-chip" data-cat="east">Phía Đông</button>
+        <button class="filter-chip" data-cat="west">Phía Tây</button>
+      </div>
+    </div>
+
+    <div class="panel-body scrollable">
+      <div class="spots-list" id="spots-list-container">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CỘT 2: TIMELINE LỊCH TRÌNH (CENTER) ── -->
+  <section class="panel timeline-panel">
+    <div class="panel-header timeline-header">
+      <div class="itin-name-row">
+        <label for="itin-name">Tên lịch trình:</label>
+        <input type="text" id="itin-name" value="Cao Bằng Trải Nghiệm" placeholder="Ví dụ: Cao Bằng 3 Ngày 2 Đêm Classic..." />
+      </div>
+      <div class="timeline-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-add-day">+ Thêm ngày mới</button>
+      </div>
+    </div>
+
+    <div class="panel-body scrollable timeline-body">
+      <div class="days-list" id="days-list-container">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- Summary footer bar -->
+    <div class="summary-footer" id="summary-bar">
+      Đang chọn: <strong>Ngày 1</strong> &nbsp;·&nbsp; <strong>1</strong> ngày &nbsp;·&nbsp; <strong>0</strong> điểm dừng &nbsp;·&nbsp; <strong>~0 km</strong> tổng cộng
+    </div>
+  </section>
+
+  <!-- ── CỘT 3: BẢN ĐỒ & XUẤT FILE (RIGHT) ── -->
+  <section class="panel right-panel">
+    <div class="panel-tabs">
+      <button class="tab-btn active" data-target="tab-map">🗺️ Bản đồ lộ trình</button>
+      <button class="tab-btn" data-target="tab-export">📋 Xuất kết quả</button>
+    </div>
+
+    <!-- TAB BẢN ĐỒ -->
+    <div class="tab-pane active" id="tab-map">
+      <div class="map-container">
+        <div class="map-controls">
+          <button id="zoom-in" title="Phóng to">+</button>
+          <button id="zoom-out" title="Thu nhỏ">−</button>
+          <button id="zoom-reset" title="Đặt lại">↺</button>
+        </div>
+        <div class="map-wrapper">
+          <svg id="svg-map" viewBox="350 100 520 347" xmlns="http://www.w3.org/2000/svg">
+            <image href={`${base}images/caobang_map.jpg`} x="0" y="0" width="900" height="600" preserveAspectRatio="none" />
+            <!-- Injected roads -->
+            <g id="map-roads-slot"></g>
+            <!-- Ghost dots (unselected spots) -->
+            <g id="map-ghost-spots"></g>
+            <!-- Selected pins -->
+            <g id="map-selected-pins"></g>
+          </svg>
+        </div>
+        <div class="map-hint">Cuộn chuột để zoom · Nhấp và kéo để di chuyển bản đồ</div>
+      </div>
+    </div>
+
+    <!-- TAB XUẤT FILE -->
+    <div class="tab-pane" id="tab-export">
+      <div class="export-container scrollable">
+        
+        <div class="export-section">
+          <div class="export-header-row">
+            <label>💬 Văn bản gửi khách (Zalo)</label>
+            <button class="btn btn-copy" data-target="out-text">Copy</button>
+          </div>
+          <p class="export-desc">Văn bản mô tả lịch trình dạng chữ để gửi trực tiếp cho khách qua Zalo/Facebook.</p>
+          <textarea id="out-text" rows="8" readonly placeholder="Bấm 'Xuất kết quả' để tạo dữ liệu..."></textarea>
+        </div>
+
+        <div class="export-section">
+          <div class="export-header-row">
+            <label>⚙️ Presets Entry (TypeScript)</label>
+            <button class="btn btn-copy" data-target="out-presets">Copy</button>
+          </div>
+          <p class="export-desc">Mã cấu hình dùng để cập nhật presets tĩnh trong mã nguồn dự án.</p>
+          <textarea id="out-presets" rows="5" readonly placeholder="Bấm 'Xuất kết quả' để tạo dữ liệu..."></textarea>
+        </div>
+
+        <div class="export-section">
+          <div class="export-header-row">
+            <label>📦 Cấu trúc dữ liệu JSON</label>
+            <button class="btn btn-copy" data-target="out-json">Copy</button>
+          </div>
+          <p class="export-desc">Định dạng JSON đầy đủ kèm ghi chú để lưu trữ hoặc nạp dữ liệu động.</p>
+          <textarea id="out-json" rows="8" readonly placeholder="Bấm 'Xuất kết quả' để tạo dữ liệu..."></textarea>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- CSS encapsulated styling -->
+<style>
+  :root {
+    --header-h: 60px;
+    --border-rad: 12px;
+  }
+
+  /* Global Layout */
+  .builder-header {
+    height: var(--header-h);
+    background: var(--ink);
+    color: oklch(0.940 0.005 55.0);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .hdr-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .hdr-left h1 {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: oklch(0.940 0.005 55.0);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .back-link:hover {
+    opacity: 1;
+  }
+
+  .divider {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .hdr-left .badge {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .hdr-right {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .builder-workspace {
+    height: calc(100vh - var(--header-h));
+    display: grid;
+    grid-template-columns: 320px 1fr 380px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  @media (max-width: 1024px) {
+    .builder-workspace {
+      grid-template-columns: 1fr;
+      grid-template-rows: 400px 1fr 400px;
+      overflow-y: auto;
+      height: auto;
+    }
+  }
+
+  /* Panels Structure */
+  .panel {
+    background: white;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .right-panel {
+    border-right: none;
+    border-left: 1px solid var(--line);
+  }
+
+  .panel-header {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .panel-header h2 {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 var(--space-xs) 0;
+  }
+
+  .panel-desc {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    margin: 0 0 var(--space-sm) 0;
+  }
+
+  .panel-body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .scrollable {
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* Search & Filters */
+  .search-box {
+    position: relative;
+    margin-bottom: var(--space-sm);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: var(--space-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    outline: none;
+  }
+
+  .search-box input:focus {
+    border-color: var(--primary);
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .filter-chip {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-chip:hover {
+    background: var(--line);
+    color: var(--ink);
+  }
+
+  .filter-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  /* Destination Library Spot Cards */
+  .spots-list {
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .spot-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s;
+  }
+
+  .spot-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .spot-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .spot-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .spot-name {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .spot-meta {
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .spot-add-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: oklch(0.920 0.040 55.0);
+    color: var(--primary);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .spot-card:hover .spot-add-btn {
+    background: var(--primary);
+    color: white;
+  }
+
+  /* Timeline Panel (Center) */
+  .timeline-panel {
+    background: var(--surface);
+  }
+
+  .timeline-header {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .itin-name-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+  }
+
+  .itin-name-row label {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .itin-name-row input {
+    flex: 1;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    outline: none;
+  }
+
+  .itin-name-row input:focus {
+    border-color: var(--primary);
+  }
+
+  .timeline-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .timeline-body {
+    padding: var(--space-md);
+  }
+
+  .days-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .day-container {
+    background: white;
+    border-radius: var(--border-rad);
+    border: 2px solid transparent;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .day-container.active {
+    border-color: var(--active-color, var(--primary));
+  }
+
+  .day-header-strip {
+    color: white;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: var(--text-sm);
+    user-select: none;
+  }
+
+  .day-header-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .day-header-info .day-km {
+    font-weight: 400;
+    opacity: 0.9;
+    font-size: var(--text-xs);
+    background: rgba(255,255,255,0.2);
+    padding: 1px 8px;
+    border-radius: 10px;
+  }
+
+  .btn-remove-day {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+    transition: background 0.2s;
+  }
+
+  .btn-remove-day:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .day-stops-box {
+    padding: var(--space-sm);
+  }
+
+  .day-empty-msg {
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-style: italic;
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  /* Timeline Stops Rows */
+  .stop-row-item {
+    display: grid;
+    grid-template-columns: 24px 44px 1fr auto;
+    gap: var(--space-sm);
+    align-items: start;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stop-row-item:last-child {
+    border-bottom: none;
+  }
+
+  .stop-index {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: white;
+    font-weight: 800;
+    font-size: var(--text-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 3px;
+  }
+
+  .stop-img {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--surface);
+  }
+
+  .stop-details-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stop-title-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .stop-note-edit {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: var(--text-xs);
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  .stop-note-edit:focus {
+    border-color: var(--primary);
+  }
+
+  .stop-row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stop-row-actions button {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 4px;
+    width: 22px;
+    height: 18px;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stop-row-actions button:hover {
+    background: var(--line);
+  }
+
+  .stop-row-actions button.btn-delete-stop {
+    background: oklch(0.950 0.020 25.0);
+    color: var(--error);
+    border-color: rgba(220, 38, 38, 0.1);
+  }
+
+  .stop-row-actions button.btn-delete-stop:hover {
+    background: var(--error);
+    color: white;
+  }
+
+  .stop-row-actions button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .summary-footer {
+    height: 40px;
+    background: white;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-md);
+    font-size: var(--text-xs);
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* Right Panel Tabs & Map */
+  .panel-tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px var(--space-sm);
+    background: transparent;
+    border: none;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    color: var(--ink);
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: white;
+  }
+
+  .tab-pane {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .tab-pane.active {
+    display: flex;
+  }
+
+  /* Interactive Map */
+  .map-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: #eaeaea;
+  }
+
+  .map-controls {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .map-controls button {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid var(--line-strong);
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .map-controls button:hover {
+    background: var(--surface);
+  }
+
+  .map-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #svg-map {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    display: block;
+  }
+
+  #svg-map:active {
+    cursor: grabbing;
+  }
+
+  .map-hint {
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 10px;
+    text-align: center;
+    padding: 6px;
+    pointer-events: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  /* Exporter style */
+  .export-container {
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .export-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .export-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .export-header-row label {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .export-desc {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .export-section textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 11px;
+    padding: var(--space-sm);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+    resize: vertical;
+    outline: none;
+  }
+
+  .btn-copy {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy:hover {
+    background: var(--line);
+    color: var(--ink);
+  }
+
+  .btn-copy.copied {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+  }
+
+  /* Button Overrides matching DESIGN.md */
+  .btn {
+    font-family: Satoshi, sans-serif;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: var(--text-sm);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .btn-secondary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: var(--accent-hover);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+  }
+
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: var(--text-xs);
+  }
+</style>
+
+<!-- CLIENT-SIDE VANILLA JAVASCRIPT INJECTED WITH ASTRO DATA -->
+<script define:vars={{ LIBRARY, KM, ROADS_SVG, base }}>
+  // State variables
+  let days = [{ stops: [] }]; // stops: [{id: string, note: string}]
+  let activeDayIndex = 0;
+  
+  const DAY_COLORS = ['#E76F51','#2D6A4F','#264653','#E9C46A','#8338EC','#3A86FF','#06D6A0'];
+
+  // DOM Elements
+  const spotsContainer = document.getElementById('spots-list-container');
+  const daysContainer = document.getElementById('days-list-container');
+  const summaryBar = document.getElementById('summary-bar');
+  const mapRoadsSlot = document.getElementById('map-roads-slot');
+  const mapGhostSpots = document.getElementById('map-ghost-spots');
+  const mapSelectedPins = document.getElementById('map-selected-pins');
+  const spotSearchInput = document.getElementById('spot-search');
+  const categoryFilters = document.getElementById('category-filters');
+  const itinNameInput = document.getElementById('itin-name');
+
+  // Load road SVG background into map
+  if (mapRoadsSlot) {
+    mapRoadsSlot.innerHTML = ROADS_SVG;
+  }
+
+  // ── SPOT DISTANCE CALCULATIONS ──
+  function getKmDistance(fromId, toId) {
+    if (fromId === toId) return 0;
+    const key = `${fromId}->${toId}`;
+    if (KM[key] !== undefined) return KM[key];
+    const destination = LIBRARY.find(item => item.id === toId);
+    return destination ? destination.km : 0;
+  }
+
+  function calcDayKm(stops) {
+    if (!stops || stops.length === 0) return 0;
+    // Trip starts at home base, visits stops, returns to home base
+    const fullRoute = ['home', ...stops.map(s => s.id), 'home'];
+    let totalDist = 0;
+    for (let i = 0; i < fullRoute.length - 1; i++) {
+      totalDist += getKmDistance(fullRoute[i], fullRoute[i + 1]);
+    }
+    return Math.round(totalDist * 10) / 10;
+  }
+
+  // ── RENDER SPOTS LIBRARY (LEFT COLUMN) ──
+  function renderLibrary() {
+    const searchVal = spotSearchInput.value.toLowerCase().trim();
+    const activeChip = categoryFilters.querySelector('.filter-chip.active');
+    const selectedCat = activeChip ? activeChip.getAttribute('data-cat') : 'all';
+
+    spotsContainer.innerHTML = '';
+
+    const filtered = LIBRARY.filter(spot => {
+      // Exclude home base from regular selection list as it's the start/end point implicitly
+      if (spot.id === 'home') return false;
+
+      // Filter by search
+      const matchesSearch = !searchVal || 
+        spot.name.toLowerCase().includes(searchVal) || 
+        spot.id.includes(searchVal);
+
+      // Filter by category
+      let matchesCat = true;
+      if (selectedCat !== 'all') {
+        if (selectedCat === 'east' || selectedCat === 'west') {
+          matchesCat = spot.region === selectedCat;
+        } else {
+          matchesCat = spot.cat === selectedCat;
+        }
+      }
+
+      return matchesSearch && matchesCat;
+    });
+
+    filtered.forEach(spot => {
+      const card = document.createElement('div');
+      card.className = 'spot-card';
+      card.innerHTML = `
+        <img class="spot-thumb" src="${base}${spot.img}" alt="" onerror="this.style.visibility='hidden'" />
+        <div class="spot-info">
+          <div class="spot-name">${spot.name}</div>
+          <div class="spot-meta">${spot.km} km từ homestay</div>
+        </div>
+        <button class="spot-add-btn">+</button>
+      `;
+      card.addEventListener('click', () => {
+        addStopToActiveDay(spot.id);
+      });
+      spotsContainer.appendChild(card);
+    });
+  }
+
+  // ── ACTIONS ──
+  function addStopToActiveDay(spotId) {
+    days[activeDayIndex].stops.push({ id: spotId, note: '' });
+    updateAndRender();
+  }
+
+  function removeStopFromDay(dayIndex, stopIndex) {
+    days[dayIndex].stops.splice(stopIndex, 1);
+    updateAndRender();
+  }
+
+  function moveStopInDay(dayIndex, stopIndex, direction) {
+    const stops = days[dayIndex].stops;
+    const nextIndex = stopIndex + direction;
+    if (nextIndex < 0 || nextIndex >= stops.length) return;
+    // Swap stops
+    const temp = stops[stopIndex];
+    stops[stopIndex] = stops[nextIndex];
+    stops[nextIndex] = temp;
+    updateAndRender();
+  }
+
+  function updateStopNote(dayIndex, stopIndex, val) {
+    days[dayIndex].stops[stopIndex].note = val;
+  }
+
+  function addNewDay() {
+    days.push({ stops: [] });
+    activeDayIndex = days.length - 1;
+    updateAndRender();
+  }
+
+  function removeDay(dayIndex) {
+    if (days.length <= 1) return;
+    if (confirm(`Bạn có chắc muốn xóa Ngày ${dayIndex + 1}?`)) {
+      days.splice(dayIndex, 1);
+      if (activeDayIndex >= days.length) {
+        activeDayIndex = days.length - 1;
+      }
+      updateAndRender();
+    }
+  }
+
+  function clearAllItinerary() {
+    if (confirm('Xóa toàn bộ lịch trình đang làm và bắt đầu lại?')) {
+      days = [{ stops: [] }];
+      activeDayIndex = 0;
+      itinNameInput.value = 'Cao Bằng Trải Nghiệm';
+      updateAndRender();
+    }
+  }
+
+  // ── TIMELINE RENDER (CENTER COLUMN) ──
+  function renderTimeline() {
+    daysContainer.innerHTML = '';
+
+    days.forEach((day, di) => {
+      const dayColor = DAY_COLORS[di % DAY_COLORS.length];
+      const dayKm = calcDayKm(day.stops);
+      const isActive = di === activeDayIndex;
+
+      const dayDiv = document.createElement('div');
+      dayDiv.className = `day-container ${isActive ? 'active' : ''}`;
+      dayDiv.style.setProperty('--active-color', dayColor);
+      
+      dayDiv.addEventListener('click', (e) => {
+        // Prevent click trigger if interacting with form elements
+        if (e.target.closest('button, textarea, input')) return;
+        activeDayIndex = di;
+        updateAndRender();
+      });
+
+      dayDiv.innerHTML = `
+        <div class="day-header-strip" style="background: ${dayColor}">
+          <div class="day-header-info">
+            <span>Ngày ${di + 1}</span>
+            <span class="day-km">~${dayKm} km</span>
+          </div>
+          ${days.length > 1 ? `<button class="btn-remove-day" data-day="${di}" title="Xóa ngày">✕</button>` : ''}
+        </div>
+        <div class="day-stops-box" id="day-stops-box-${di}">
+          <!-- Stops loaded dynamically -->
+        </div>
+      `;
+
+      daysContainer.appendChild(dayDiv);
+
+      // Attach remove day handler
+      const removeBtn = dayDiv.querySelector('.btn-remove-day');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeDay(di);
+        });
+      }
+
+      // Render stops inside this day
+      const stopsBox = document.getElementById(`day-stops-box-${di}`);
+      if (day.stops.length === 0) {
+        stopsBox.innerHTML = `<div class="day-empty-msg">Chưa có điểm dừng. Click địa điểm ở cột trái để thêm vào.</div>`;
+      } else {
+        day.stops.forEach((stop, si) => {
+          const dest = LIBRARY.find(item => item.id === stop.id);
+          if (!dest) return;
+
+          const row = document.createElement('div');
+          row.className = 'stop-row-item';
+          row.innerHTML = `
+            <div class="stop-index" style="background: ${dayColor}">${si + 1}</div>
+            <img class="stop-img" src="${base}${dest.img}" alt="" onerror="this.style.visibility='hidden'" />
+            <div class="stop-details-edit">
+              <span class="stop-title-label">${dest.name}</span>
+              <textarea class="stop-note-edit" rows="1" placeholder="Ghi chú (Ví dụ: 09:00 chụp ảnh, ăn trưa...)">${stop.note}</textarea>
+            </div>
+            <div class="stop-row-actions">
+              <button class="btn-up" ${si === 0 ? 'disabled' : ''} title="Di chuyển lên">↑</button>
+              <button class="btn-down" ${si === day.stops.length - 1 ? 'disabled' : ''} title="Di chuyển xuống">↓</button>
+              <button class="btn-delete-stop" title="Xóa">✕</button>
+            </div>
+          `;
+
+          // Event Listeners for actions
+          row.querySelector('.stop-note-edit').addEventListener('input', (e) => {
+            updateStopNote(di, si, e.target.value);
+            // Auto grow height
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+          });
+
+          row.querySelector('.btn-up').addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveStopInDay(di, si, -1);
+          });
+
+          row.querySelector('.btn-down').addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveStopInDay(di, si, 1);
+          });
+
+          row.querySelector('.btn-delete-stop').addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeStopFromDay(di, si);
+          });
+
+          stopsBox.appendChild(row);
+
+          // Initial auto-height for notes textarea
+          const noteTextarea = row.querySelector('.stop-note-edit');
+          if (noteTextarea && stop.note) {
+            noteTextarea.style.height = noteTextarea.scrollHeight + 'px';
+          }
+        });
+      }
+    });
+  }
+
+  // ── RENDERING THE MAP PREVIEW (RIGHT COLUMN) ──
+  function renderMap() {
+    const NS = 'http://www.w3.org/2000/svg';
+    mapGhostSpots.innerHTML = '';
+    mapSelectedPins.innerHTML = '';
+
+    const selectedSpotIds = new Set(days.flatMap(d => d.stops.map(s => s.id)));
+
+    // 1. Render gray ghost dots for unselected destinations
+    LIBRARY.filter(spot => spot.id !== 'home' && !selectedSpotIds.has(spot.id)).forEach(spot => {
+      const circle = document.createElementNS(NS, 'circle');
+      circle.setAttribute('cx', spot.sx.toString());
+      circle.setAttribute('cy', spot.sy.toString());
+      circle.setAttribute('r', '5');
+      circle.setAttribute('fill', 'rgba(255, 255, 255, 0.7)');
+      circle.setAttribute('stroke', '#a3a3a3');
+      circle.setAttribute('stroke-width', '1.5');
+      
+      const title = document.createElementNS(NS, 'title');
+      title.textContent = spot.name;
+      circle.appendChild(title);
+      
+      mapGhostSpots.appendChild(circle);
+    });
+
+    // 2. Render colored numbered pins for selected destinations
+    days.forEach((day, di) => {
+      const color = DAY_COLORS[di % DAY_COLORS.length];
+      day.stops.forEach((stop, si) => {
+        const spot = LIBRARY.find(item => item.id === stop.id);
+        if (!spot || spot.id === 'home') return;
+
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('class', 'map-pin-group');
+
+        const circle = document.createElementNS(NS, 'circle');
+        circle.setAttribute('cx', spot.sx.toString());
+        circle.setAttribute('cy', spot.sy.toString());
+        circle.setAttribute('r', '11');
+        circle.setAttribute('fill', color);
+        circle.setAttribute('stroke', 'white');
+        circle.setAttribute('stroke-width', '2');
+        circle.setAttribute('style', 'filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3))');
+
+        const text = document.createElementNS(NS, 'text');
+        text.setAttribute('x', spot.sx.toString());
+        text.setAttribute('y', spot.sy.toString());
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('font-size', '10');
+        text.setAttribute('font-weight', '800');
+        text.setAttribute('fill', 'white');
+        text.setAttribute('pointer-events', 'none');
+        text.textContent = (si + 1).toString();
+
+        const title = document.createElementNS(NS, 'title');
+        title.textContent = `${spot.name} (Ngày ${di + 1} - Điểm ${si + 1})`;
+        circle.appendChild(title);
+
+        g.appendChild(circle);
+        g.appendChild(text);
+        mapSelectedPins.appendChild(g);
+      });
+    });
+  }
+
+  // ── UPDATE SUMMARY BAR ──
+  function renderSummary() {
+    const totalDays = days.length;
+    const totalStops = days.reduce((n, d) => n + d.stops.length, 0);
+    const totalKm = days.reduce((n, d) => n + calcDayKm(d.stops), 0);
+
+    summaryBar.innerHTML = `
+      Đang chọn: <strong>Ngày ${activeDayIndex + 1}</strong> &nbsp;·&nbsp;
+      <strong>${totalDays}</strong> ngày &nbsp;·&nbsp;
+      <strong>${totalStops}</strong> điểm dừng &nbsp;·&nbsp;
+      <strong>~${Math.round(totalKm * 10) / 10} km</strong> tổng cộng
+    `;
+  }
+
+  // ── UPDATE & RENDER ALL ──
+  function updateAndRender() {
+    renderTimeline();
+    renderMap();
+    renderSummary();
+  }
+
+  // ── EXPORT RESULTS ──
+  function doExport() {
+    const name = itinNameInput.value.trim() || 'Lịch trình Cao Bằng';
+    const key = name.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .trim() || 'custom-itinerary';
+
+    const totalKmSum = Math.round(days.reduce((n, d) => n + calcDayKm(d.stops), 0) * 10) / 10;
+
+    // 1. Text description format for Zalo/Social
+    let textOut = `📍 LỊCH TRÌNH: ${name.toUpperCase()}\n`;
+    textOut += `⏱ Tổng thời gian: ${days.length} ngày · Cự ly di chuyển: ~${totalKmSum} km\n`;
+    textOut += `-----------------------------------------\n\n`;
+
+    days.forEach((day, di) => {
+      const dayKm = calcDayKm(day.stops);
+      textOut += `📅 NGÀY ${di + 1} (~${dayKm} km)\n`;
+      if (day.stops.length === 0) {
+        textOut += `   (Chưa lên điểm dừng)\n`;
+      } else {
+        day.stops.forEach((stop, si) => {
+          const sp = LIBRARY.find(l => l.id === stop.id);
+          textOut += `  ${si + 1}. ${sp ? sp.name : stop.id}`;
+          if (stop.note.trim()) {
+            textOut += ` - ${stop.note.trim()}`;
+          }
+          textOut += `\n`;
+        });
+      }
+      textOut += `\n`;
+    });
+    
+    textOut += `📞 Liên hệ hỗ trợ vận hành & Đặt homestay/xe máy: 0822.946.888 (Sen's Homestay)`;
+    document.getElementById('out-text').value = textOut;
+
+    // 2. TypeScript Presets code entry
+    const tsDaysArr = days.map(d => `[${d.stops.map(s => `'${s.id}'`).join(', ')}]`).join(',\n         ');
+    const presetsOut = `// Preset: ${name}\n'${key}': [\n         ${tsDaysArr}\n],`;
+    document.getElementById('out-presets').value = presetsOut;
+
+    // 3. Complete Rich JSON format
+    const richJson = {
+      key: key,
+      name: name,
+      daysCount: days.length,
+      totalKm: totalKmSum,
+      days: days.map((d, di) => ({
+        dayNumber: di + 1,
+        dayTitle: `Ngày ${di + 1}`,
+        dayKm: calcDayKm(d.stops),
+        activities: d.stops.map(s => {
+          const sp = LIBRARY.find(l => l.id === s.id);
+          return {
+            id: s.id,
+            title: sp ? sp.name : s.id,
+            desc: s.note.trim() || undefined,
+            img: sp ? sp.img : undefined,
+            maps: sp ? sp.maps : undefined
+          };
+        })
+      }))
+    };
+    document.getElementById('out-json').value = JSON.stringify(richJson, null, 2);
+
+    // Switch tab to Export Tab
+    switchTab('tab-export');
+  }
+
+  function switchTab(targetId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.getAttribute('id') === targetId);
+    });
+  }
+
+  // ── SEARCH & FILTER EVENT LISTENERS ──
+  spotSearchInput.addEventListener('input', renderLibrary);
+  
+  categoryFilters.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      categoryFilters.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderLibrary();
+    });
+  });
+
+  // Header and timeline controls
+  document.getElementById('btn-add-day').addEventListener('click', addNewDay);
+  document.getElementById('btn-clear-all').addEventListener('click', clearAllItinerary);
+  document.getElementById('btn-export').addEventListener('click', doExport);
+
+  // Tab switching click handlers
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchTab(btn.getAttribute('data-target'));
+    });
+  });
+
+  // Clipboard copy handlers
+  document.querySelectorAll('.btn-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTextarea = document.getElementById(btn.getAttribute('data-target'));
+      if (targetTextarea) {
+        targetTextarea.select();
+        navigator.clipboard.writeText(targetTextarea.value).then(() => {
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copied';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('copied');
+          }, 1500);
+        });
+      }
+    });
+  });
+
+  // ── MAP PAN & ZOOM LOGIC ──
+  const svgMap = document.getElementById('svg-map');
+  let viewBox = { x: 350, y: 100, w: 520, h: 347 };
+  let isPanning = false;
+  let panStartPoint = { x: 0, y: 0 };
+  let originalViewBox = { ...viewBox };
+
+  function setMapViewBox() {
+    svgMap.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+  }
+
+  svgMap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY > 0 ? 1.15 : 0.85;
+    const rect = svgMap.getBoundingClientRect();
+    
+    const mousePercentX = (e.clientX - rect.left) / rect.width;
+    const mousePercentY = (e.clientY - rect.top) / rect.height;
+    
+    const focalPointX = viewBox.x + viewBox.w * mousePercentX;
+    const focalPointY = viewBox.y + viewBox.h * mousePercentY;
+    
+    const newW = Math.max(100, Math.min(900, viewBox.w * zoomFactor));
+    const newH = newW * (347 / 520); // Maintain aspect ratio
+    
+    viewBox = {
+      x: focalPointX - newW * mousePercentX,
+      y: focalPointY - newH * mousePercentY,
+      w: newW,
+      h: newH
+    };
+    
+    setMapViewBox();
+  }, { passive: false });
+
+  svgMap.addEventListener('mousedown', (e) => {
+    isPanning = true;
+    panStartPoint = { x: e.clientX, y: e.clientY };
+    originalViewBox = { ...viewBox };
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    const rect = svgMap.getBoundingClientRect();
+    const deltaX = ((e.clientX - panStartPoint.x) / rect.width) * viewBox.w;
+    const deltaY = ((e.clientY - panStartPoint.y) / rect.height) * viewBox.h;
+    
+    viewBox.x = originalViewBox.x - deltaX;
+    viewBox.y = originalViewBox.y - deltaY;
+    
+    setMapViewBox();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isPanning = false;
+  });
+
+  // Map controls
+  document.getElementById('zoom-in').addEventListener('click', () => {
+    const centerPointX = viewBox.x + viewBox.w / 2;
+    const centerPointY = viewBox.y + viewBox.h / 2;
+    viewBox.w = Math.max(100, viewBox.w * 0.8);
+    viewBox.h = viewBox.w * (347 / 520);
+    viewBox.x = centerPointX - viewBox.w / 2;
+    viewBox.y = centerPointY - viewBox.h / 2;
+    setMapViewBox();
+  });
+
+  document.getElementById('zoom-out').addEventListener('click', () => {
+    const centerPointX = viewBox.x + viewBox.w / 2;
+    const centerPointY = viewBox.y + viewBox.h / 2;
+    viewBox.w = Math.min(900, viewBox.w * 1.25);
+    viewBox.h = viewBox.w * (347 / 520);
+    viewBox.x = centerPointX - viewBox.w / 2;
+    viewBox.y = centerPointY - viewBox.h / 2;
+    setMapViewBox();
+  });
+
+  document.getElementById('zoom-reset').addEventListener('click', () => {
+    viewBox = { x: 350, y: 100, w: 520, h: 347 };
+    setMapViewBox();
+  });
+
+  // ── INITIALIZATION ──
+  renderLibrary();
+  updateAndRender();
+</script>
+
+</Base>

@@ -1,8 +1,15 @@
-# Product
+# Product: Sen's Homestay (Cao Bằng)
 
 ## Register
 
 brand
+
+## Brand Contact
+* Tên chính thức: Sen's Homestay (Cao Bằng)
+* Hotline / Zalo: 0822946888
+* Link Zalo: https://zalo.me/0822946888
+* Mô hình: Khách được cung cấp miễn phí cẩm nang/lịch trình chi tiết dưới dạng PDF. Nguồn khách tập trung qua các kênh mạng xã hội như TikTok, Facebook.
+
 
 ## Users
 

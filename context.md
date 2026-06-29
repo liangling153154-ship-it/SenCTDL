@@ -1,4 +1,10 @@
-# Project Context: Cao Bằng Travel Program Platform
+# Project Context: Sen's Homestay (Cao Bằng) - Travel Platform
+
+## Thông tin thương hiệu & Liên hệ
+* **Tên thương hiệu:** Sen's Homestay (Cao Bằng)
+* **Hotline / Zalo:** 0822946888
+* **Kênh truyền thông:** Tập trung qua mạng xã hội (TikTok, Facebook).
+* **Cách phân phối sản phẩm:** Cung cấp miễn phí bản PDF Travel Book của lịch trình cho khách hàng để tạo phễu niềm tin dẫn tới việc đặt phòng và thuê xe.
 
 ## 1. Tầm nhìn
 
