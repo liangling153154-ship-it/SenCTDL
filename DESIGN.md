@@ -63,8 +63,8 @@ For dark anchor sections (hero overlay, footer, immersive timeline):
 
 ### Font pairing
 
-- **Display & Headings**: [Satoshi](https://api.fontsource.org/v1/fonts/satoshi) — humanist sans-serif, geometric warmth without being cold. Confident but approachable.
-- **Body**: Satoshi — same family, lighter weights (400/500) for body. Consistency without needing a second family.
+- **Display & Headings**: [Be Vietnam Pro](https://fonts.google.com/specimen/Be+Vietnam+Pro) — humanist sans-serif do foundry Việt thiết kế, hỗ trợ dấu tiếng Việt tối ưu (ế, ữ, ợ đặt chuẩn). Ấm, tự tin, gần gũi. Weights 700/800 cho heading.
+- **Body**: Be Vietnam Pro — cùng family, weights 400/500 cho body. Một family, nhiều weight — nhất quán, không cần font thứ hai.
 - **Accent / Captions**: [Source Serif 4](https://fonts.google.com/specimen/Source+Serif+4) — for pull quotes, timeline annotations, editorial moments. Provides contrast axis (sans + serif) when the design needs texture.
 
 ### Scale

@@ -1,8 +1,23 @@
+export interface FoodOption {
+  name: string;
+  price?: string;
+  meta?: string;         // "cách homestay 300m · mở 6h"
+  reason?: string;       // vì sao nên chọn
+  recommended?: boolean; // ✦ gợi ý chính
+  image?: string;
+}
+
 export interface Activity {
   time: string;
   title: string;
   desc: string;
   image?: string;
+  // Mở rộng: 'food' = mốc ăn có 2 lựa chọn (gọn, chạm bung);
+  //          'sight' = điểm chính, bung sẵn (chip thông tin + lưu ý).
+  type?: 'food' | 'sight';
+  options?: FoodOption[];  // dùng khi type === 'food'
+  chips?: string[];        // dùng khi type === 'sight' — "Đẹp nhất: 9h sáng"...
+  tip?: string;            // lưu ý / phương án mưa cho điểm chính
 }
 
 export interface DayItinerary {
@@ -51,6 +66,44 @@ export interface ProgramDetails {
   
   itinerary: DayItinerary[];
 }
+
+export interface VehicleChoice {
+  name: string;
+  desc: string;
+  surcharge: string;      // "Đã bao gồm" | "+250.000đ/người" | "Liên hệ"
+  recommended?: boolean;  // ✦ gợi ý mặc định
+}
+
+export interface VehicleGroup {
+  key: string;
+  label: string;
+  note?: string;
+  choices: VehicleChoice[];
+}
+
+// Tuỳ chọn phương tiện dùng chung cho mọi chương trình.
+// DATA MẪU — chủ dự án chỉnh giá/phụ thu thật sau.
+export const vehicleGroups: VehicleGroup[] = [
+  {
+    key: 'longhaul',
+    label: 'Xe Hà Nội ↔ Cao Bằng',
+    note: 'Khứ hồi, đón trả tận nơi.',
+    choices: [
+      { name: 'Xe giường nằm cabin VIP', desc: 'Cabin riêng, rèm che, sạc USB — ngủ êm cả đêm, sáng tới nơi.', surcharge: 'Đã bao gồm', recommended: true },
+      { name: 'Limousine 9 chỗ đi ban ngày', desc: 'Ngắm cảnh dọc đường, nhanh hơn ~1 giờ, phù hợp ai say xe đêm.', surcharge: '+250.000đ/người' },
+    ],
+  },
+  {
+    key: 'local',
+    label: 'Di chuyển tại Cao Bằng',
+    note: 'Trong suốt hành trình khám phá.',
+    choices: [
+      { name: 'Xe máy Honda tự lái', desc: 'Wave/Blade/Winner đầy xăng — tự do dừng chụp ảnh mọi lúc.', surcharge: 'Đã bao gồm', recommended: true },
+      { name: 'Easy Rider (tài xế bản địa)', desc: 'Bạn ngồi sau, tài xế rành đường & điểm chụp đẹp, an tâm không lo lạc.', surcharge: '+350.000đ/ngày' },
+      { name: 'Ô tô riêng có tài xế', desc: 'Kín gió, hợp nhóm/gia đình hoặc khi trời mưa.', surcharge: 'Liên hệ' },
+    ],
+  },
+];
 
 export const programsData: ProgramDetails[] = [
   {
@@ -200,12 +253,38 @@ export const programsData: ProgramDetails[] = [
         dayTitle: 'Thác Bản Giốc & Ngườm Ngao',
         activities: [
           { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe đón bạn tại bến về văn phòng nghỉ ngơi.' },
-          { time: '06:30', title: 'Ăn sáng địa phương', desc: 'Phở vịt quay Cao Bằng quán Lâm ngon trứ danh.', image: 'images/Food/breakfast.jpg' },
+          {
+            time: '06:30',
+            title: 'Ăn sáng',
+            desc: 'Hai lựa chọn ngon gần điểm nhận xe — chọn theo khẩu vị.',
+            type: 'food',
+            options: [
+              { name: 'Phở vịt quay quán Lâm', price: '~40.000đ', meta: 'Cạnh bến xe · mở từ 6h', reason: 'Vịt quay da giòn, nước dùng đậm — món trứ danh Cao Bằng.', recommended: true, image: 'images/Food/breakfast.jpg' },
+              { name: 'Bánh cuốn canh', price: '~30.000đ', meta: 'Gần chợ · ăn nhanh', reason: 'Nhẹ bụng, hợp nếu muốn xuất phát sớm đi Bản Giốc.', image: 'images/Food/banh-cuon/1.jpg' },
+            ],
+          },
           { time: '07:15', title: 'Nhận xe máy đầy xăng', desc: 'Honda Wave/Winner X đã kiểm tra lốp, phanh kỹ càng.', image: 'images/bikes/wave-alpha.jpg' },
           { time: '07:30', title: 'Khởi hành đi Bản Giốc', desc: 'Hành trình 85km đi dọc theo đèo Mã Phục trùng điệp.' },
-          { time: '09:30', title: 'Khám phá thác Bản Giốc', desc: 'Góc chụp đẹp nhất lúc sáng sớm, ánh nắng chiếu qua màn sương thác nước tuyệt đẹp.', image: 'images/places/ban-gioc.jpg' },
+          {
+            time: '09:30',
+            title: 'Khám phá thác Bản Giốc',
+            desc: 'Thác nước biên giới lớn nhất Đông Nam Á — điểm nhấn của cả hành trình.',
+            type: 'sight',
+            image: 'images/places/ban-gioc.jpg',
+            chips: ['Đẹp nhất: 8–10h sáng', 'Thời lượng: ~2 giờ', 'Góc chụp: bè tre trên sông', 'Có bãi gửi xe'],
+            tip: 'Nếu trời mưa: đảo lịch xuống chiều, sáng ghé Động Ngườm Ngao trước.',
+          },
           { time: '11:00', title: 'Thăm động Ngườm Ngao', desc: 'Chiêm ngưỡng hệ thống thạch nhũ vàng óng và suối ngầm kỳ thú.', image: 'images/places/nguom-ngao.jpg' },
-          { time: '12:00', title: 'Ăn trưa tại nhà sàn', desc: 'Cơm lam, lợn mán quay, rau dạ hiến xào tỏi cực ngon.' },
+          {
+            time: '12:00',
+            title: 'Ăn trưa',
+            desc: 'Đặc sản Trùng Khánh gần Bản Giốc.',
+            type: 'food',
+            options: [
+              { name: 'Nhà sàn ven suối Khuổi Ky', price: '~150.000đ/người', meta: 'Không gian mát · yên tĩnh', reason: 'Cơm lam, lợn mán quay, rau dạ hiến — đúng vị bản địa.', recommended: true },
+              { name: 'Quán ăn thị trấn Trùng Khánh', price: '~120.000đ/người', meta: 'Tiện đường · phục vụ nhanh', reason: 'Hợp nếu muốn tiết kiệm thời gian cho buổi chiều.' },
+            ],
+          },
           { time: '14:00', title: 'Làng đá cổ Khuổi Ky', desc: 'Ngắm những nếp nhà sàn đá Tày, check-in cây cầu đá bắc qua suối.', image: 'images/places/stone-village.jpg' },
           { time: '17:00', title: 'Check-in Homestay nghỉ ngơi', desc: 'Nhận phòng Suite view núi thơ mộng.' },
           { time: '19:00', title: 'Ăn tối lẩu gà đen', desc: 'Lẩu gà đen nấm rừng nghi ngút khói bên hiên nhà sàn.' }

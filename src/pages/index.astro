@@ -420,7 +420,6 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
       <a href="#programs">Chương trình</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
-      <a href={`${base}builder/`}>Công cụ Builder</a>
     </div>
     <div class="footer-contact">
       <a href={ZALO_LINK} target="_blank" rel="noopener">Zalo</a>
@@ -739,7 +738,7 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
 }
 .problem-answer-line {
   position: absolute;
-  top: -var(--space-lg);
+  top: calc(-1 * var(--space-lg));
   left: 50%;
   width: 2px;
   height: var(--space-lg);

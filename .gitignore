@@ -15,3 +15,6 @@ Thumbs.db
 .agents/skills/impeccable/temp/
 *.log
 node_modules
+
+# Verification screenshots (transient artifacts, regenerated each session)
+sessions/screenshots/

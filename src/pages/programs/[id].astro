@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { programsData } from '../../data/programs';
+import { programsData, vehicleGroups } from '../../data/programs';
 
 export function getStaticPaths() {
   return programsData.map((p) => ({
@@ -176,6 +176,48 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   </div>
 </section>
 
+<!-- ═══════ VEHICLE OPTIONS ═══════ -->
+<section class="section-pad vehicle-section">
+  <div class="wrap">
+    <div class="section-header">
+      <h2>Tuỳ chọn phương tiện</h2>
+      <p class="section-sub">Gói đã có sẵn lựa chọn tối ưu (✦). Bạn có thể nâng cấp nếu muốn — phụ thu minh bạch, xác nhận khi nhắn Zalo.</p>
+    </div>
+
+    <div class="vehicle-groups">
+      {vehicleGroups.map(group => (
+        <div class="vehicle-group" data-group={group.key}>
+          <div class="vehicle-group-head">
+            <h3>{group.label}</h3>
+            {group.note && <span class="vehicle-group-note">{group.note}</span>}
+          </div>
+          <div class="vehicle-choices" role="radiogroup" aria-label={group.label}>
+            {group.choices.map((choice, ci) => (
+              <button
+                type="button"
+                class={`vehicle-choice ${choice.recommended ? 'selected' : ''}`}
+                role="radio"
+                aria-checked={choice.recommended ? 'true' : 'false'}
+                data-index={ci}
+              >
+                <span class="vehicle-radio" aria-hidden="true"></span>
+                <span class="vehicle-choice-body">
+                  <span class="vehicle-choice-head">
+                    {choice.recommended && <span class="vehicle-badge">✦ Gợi ý</span>}
+                    <span class="vehicle-choice-name">{choice.name}</span>
+                  </span>
+                  <span class="vehicle-choice-desc">{choice.desc}</span>
+                </span>
+                <span class={`vehicle-surcharge ${choice.surcharge === 'Đã bao gồm' ? 'included' : ''}`}>{choice.surcharge}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
 <!-- ═══════ DETAILED ITINERARY ═══════ -->
 <section class="section-pad itinerary-section bg-surface">
   <div class="wrap">
@@ -200,16 +242,72 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         <div class={`daily-timeline ${dayIdx === 0 ? 'active' : ''}`} id={`timeline-day-${day.dayNumber}`}>
           <div class="timeline">
             <div class="timeline-line"></div>
+            <div class="timeline-line-fill"></div>
+            <div class="timeline-sun" aria-hidden="true"></div>
             {day.activities.map((act, actIdx) => (
-              <div class="timeline-item reveal" style={`--i: ${actIdx}`}>
-                <div class="timeline-marker">
-                  <div class="timeline-dot"></div>
-                  <span class="timeline-time">{act.time}</span>
-                </div>
+              <div class={`timeline-item reveal ${act.type ? `timeline-${act.type}` : ''}`} style={`--i: ${actIdx}`}>
+                <div class="timeline-node"><span class="timeline-dot"></span></div>
                 <div class="timeline-content">
+                  <span class="timeline-time">{act.time}</span>
                   <h3 class="timeline-title">{act.title}</h3>
                   <p class="timeline-desc">{act.desc}</p>
-                  {act.image && (
+
+                  {/* Điểm chính: bung sẵn — ảnh + chip thông tin + lưu ý */}
+                  {act.type === 'sight' && (
+                    <div class="sight-card">
+                      {act.image && (
+                        <div class="timeline-img-wrapper">
+                          <img src={`${base}${act.image}`} alt={act.title} class="timeline-img" loading="lazy" />
+                        </div>
+                      )}
+                      {act.chips && act.chips.length > 0 && (
+                        <ul class="sight-chips">
+                          {act.chips.map(c => <li class="sight-chip">{c}</li>)}
+                        </ul>
+                      )}
+                      {act.tip && (
+                        <div class="sight-tip">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
+                          <span>{act.tip}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mốc ăn: gọn — chạm bung 2 lựa chọn */}
+                  {act.type === 'food' && act.options && act.options.length > 0 && (
+                    <details class="food-choice">
+                      <summary class="food-summary">
+                        <span class="food-summary-label">
+                          {act.options.length} lựa chọn · {(act.options.find(o => o.recommended) ?? act.options[0]).name}
+                        </span>
+                        <svg class="food-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </summary>
+                      <div class="food-options">
+                        {act.options.map(opt => (
+                          <div class={`food-option ${opt.recommended ? 'recommended' : ''}`}>
+                            {opt.image && (
+                              <img class="food-option-img" src={`${base}${opt.image}`} alt={opt.name} loading="lazy" />
+                            )}
+                            <div class="food-option-body">
+                              <div class="food-option-head">
+                                {opt.recommended && <span class="food-badge">✦ Gợi ý</span>}
+                                <span class="food-option-name">{opt.name}</span>
+                              </div>
+                              <div class="food-option-line">
+                                {opt.price && <span class="food-option-price">{opt.price}</span>}
+                                {opt.meta && <span class="food-option-meta">{opt.meta}</span>}
+                              </div>
+                              {opt.reason && <p class="food-option-reason">{opt.reason}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+
+                  {/* Mốc thường: giữ nguyên */}
+                  {!act.type && act.image && (
                     <div class="timeline-img-wrapper">
                       <img src={`${base}${act.image}`} alt={act.title} class="timeline-img" loading="lazy" />
                     </div>
@@ -553,55 +651,106 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 }
 .daily-timeline {
   display: none;
-  max-width: 700px;
+  max-width: 820px;
   margin: 0 auto;
 }
 .daily-timeline.active {
   display: block;
 }
+/* ── Timeline: mobile = 1 cột line trái; desktop = line giữa, card so le ── */
 .timeline {
   position: relative;
-  padding-left: 60px;
 }
 .timeline-line {
   position: absolute;
-  left: 24px;
-  top: 0;
-  bottom: 0;
+  left: 11px;
+  top: 6px;
+  bottom: 6px;
   width: 2px;
   background: var(--line-strong);
 }
 .timeline-item {
   position: relative;
+  padding-left: 40px;
   padding-bottom: var(--space-lg);
   transition-delay: calc(var(--i, 0) * 50ms);
 }
-.timeline-marker {
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-node {
   position: absolute;
-  left: -60px;
-  top: 2px;
+  left: 0;
+  top: 4px;
+  width: 24px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 48px;
+  justify-content: center;
+  z-index: var(--z-raised);
 }
 .timeline-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-soft);
-  z-index: var(--z-raised);
+  transition: background 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
 }
-.timeline-time {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--primary);
-  margin-top: 6px;
-  font-variant-numeric: tabular-nums;
+/* Mốc chưa tới (dưới mặt trời) → mờ đi; mặc định (no-JS) = sáng */
+.timeline-item.upcoming .timeline-dot {
+  background: var(--line-strong);
+  box-shadow: 0 0 0 4px var(--surface);
+}
+
+/* Đường "đã đi" chồng lên line + chấm mặt trời chạy theo scroll */
+.timeline-line-fill {
+  position: absolute;
+  left: 11px;
+  top: 6px;
+  width: 2px;
+  height: calc(var(--sun, 0) * (100% - 12px));
+  background: linear-gradient(180deg, var(--primary-soft), var(--primary));
+  border-radius: 2px;
+  z-index: 1;
+  transition: height 0.15s linear;
+}
+.timeline-sun {
+  position: absolute;
+  left: 12px;
+  top: calc(6px + var(--sun, 0) * (100% - 12px));
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, oklch(0.92 0.10 90), oklch(0.75 0.16 65) 65%, oklch(0.66 0.17 55));
+  box-shadow: 0 0 14px 4px oklch(0.80 0.15 70 / 0.45);
+  z-index: 4;
+  pointer-events: none;
+  transition: top 0.15s linear;
+}
+@media (min-width: 900px) {
+  .timeline-line-fill { left: 50%; margin-left: -1px; }
+  .timeline-sun { left: 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-line-fill, .timeline-sun { transition: none; }
+  .timeline-sun { display: none; }
 }
 .timeline-content {
-  padding-left: var(--space-md);
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+}
+.timeline-time {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--primary-hover);
+  background: var(--primary-soft);
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
 }
 .timeline-title {
   font-size: var(--text-lg);
@@ -612,6 +761,45 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   font-size: var(--text-sm);
   color: var(--muted);
   line-height: 1.6;
+}
+
+/* Desktop ≥900px: line giữa, card so le trái/phải + connector */
+@media (min-width: 900px) {
+  .timeline-line {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .timeline-item {
+    padding-left: 0;
+    padding-bottom: var(--space-xl);
+  }
+  .timeline-node {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .timeline-content {
+    width: calc(50% - 34px);
+  }
+  .timeline-item:nth-child(odd) .timeline-content { margin-right: auto; }
+  .timeline-item:nth-child(even) .timeline-content { margin-left: auto; }
+  .timeline-item:nth-child(odd) .timeline-content::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    right: -34px;
+    width: 34px;
+    height: 2px;
+    background: var(--line-strong);
+  }
+  .timeline-item:nth-child(even) .timeline-content::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: -34px;
+    width: 34px;
+    height: 2px;
+    background: var(--line-strong);
+  }
 }
 .timeline-img-wrapper {
   margin-top: var(--space-sm);
@@ -626,6 +814,257 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ── Điểm chính (sight): dot to hơn để nổi bật ── */
+.timeline-sight .timeline-dot {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 0 5px var(--primary-soft);
+}
+.timeline-sight .timeline-title {
+  font-size: var(--text-xl);
+}
+
+/* ── Sight card: chip thông tin + lưu ý ── */
+.sight-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--space-sm);
+}
+.sight-chip {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+}
+.sight-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: var(--space-sm);
+  padding: 10px 14px;
+  background: var(--primary-soft);
+  border-radius: var(--r);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  line-height: 1.55;
+}
+.sight-tip svg {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Food choice: accordion 2 lựa chọn ── */
+.food-choice {
+  margin-top: var(--space-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+  overflow: hidden;
+}
+.food-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.food-summary::-webkit-details-marker { display: none; }
+.food-summary::marker { content: ''; }
+.food-chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.3s var(--ease-out);
+}
+.food-choice[open] .food-chevron { transform: rotate(180deg); }
+.food-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+.food-option {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.food-option.recommended {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.food-option-img {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.food-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.food-option-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.food-badge {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--on-primary);
+  background: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+.food-option-name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+.food-option-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.food-option-price {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--primary);
+}
+.food-option-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.food-option-reason {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ═══════ VEHICLE OPTIONS ═══════ */
+.vehicle-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 720px;
+}
+.vehicle-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+.vehicle-group-head h3 { font-size: var(--text-lg); }
+.vehicle-group-note { font-size: var(--text-sm); color: var(--muted); }
+.vehicle-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vehicle-choice {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.vehicle-choice:hover { border-color: var(--primary); }
+.vehicle-choice.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.vehicle-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.vehicle-choice.selected .vehicle-radio { border-color: var(--primary); }
+.vehicle-choice.selected .vehicle-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.vehicle-choice-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 60%;
+}
+.vehicle-choice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vehicle-badge {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--on-primary);
+  background: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+.vehicle-choice-name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--ink);
+}
+.vehicle-choice-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.vehicle-surcharge {
+  margin-left: auto;
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.vehicle-surcharge.included {
+  color: var(--muted);
+  font-weight: 600;
 }
 
 /* ═══════ FOOTER CTA ═══════ */
@@ -738,16 +1177,6 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   .detail-hero h1 {
     font-size: var(--text-2xl);
   }
-  .timeline {
-    padding-left: 48px;
-  }
-  .timeline-line {
-    left: 18px;
-  }
-  .timeline-marker {
-    left: -48px;
-    width: 36px;
-  }
 }
 </style>
 
@@ -795,6 +1224,21 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     });
   });
 
+  // Vehicle option selection (radio behavior within each group)
+  document.querySelectorAll('.vehicle-group').forEach(group => {
+    const choices = group.querySelectorAll('.vehicle-choice');
+    choices.forEach(choice => {
+      choice.addEventListener('click', () => {
+        choices.forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-checked', 'false');
+        });
+        choice.classList.add('selected');
+        choice.setAttribute('aria-checked', 'true');
+      });
+    });
+  });
+
   // Simple Scroll Reveal integration on page switch
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver(
@@ -809,4 +1253,47 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     { threshold: 0.1 }
   );
   reveals.forEach(el => observer.observe(el));
+
+  // ── Timeline: mặt trời chạy theo scroll + nền đổi màu sáng→tối ──
+  const itinSection = document.querySelector('.itinerary-section');
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // "Bầu trời thật" — màu lấy từ trời, giảm bão hoà cho tinh tế nhưng vẫn rõ.
+  // Sáng cerulean dịu → trưa kem nắng → chiều đào golden-hour → tối tím periwinkle.
+  const SKY = [196, 219, 236], NOON = [244, 235, 203], GOLD = [241, 204, 166], DUSK = [206, 197, 226];
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  const mixRGB = (c1, c2, t) => `rgb(${lerp(c1[0], c2[0], t)}, ${lerp(c1[1], c2[1], t)}, ${lerp(c1[2], c2[2], t)})`;
+  const dayColor = (p) => {
+    if (p < 1 / 3) return mixRGB(SKY, NOON, p / (1 / 3));
+    if (p < 2 / 3) return mixRGB(NOON, GOLD, (p - 1 / 3) / (1 / 3));
+    return mixRGB(GOLD, DUSK, (p - 2 / 3) / (1 / 3));
+  };
+
+  let tlTicking = false;
+  function updateTimelineSun() {
+    tlTicking = false;
+    const tl = document.querySelector('.daily-timeline.active .timeline');
+    if (!tl) return;
+    if (prefersReduced.matches) {
+      tl.style.setProperty('--sun', '0');
+      tl.querySelectorAll('.timeline-item').forEach(it => it.classList.remove('upcoming'));
+      if (itinSection) itinSection.style.background = dayColor(0.2);
+      return;
+    }
+    const rect = tl.getBoundingClientRect();
+    const ref = window.innerHeight * 0.45;
+    let p = (ref - rect.top) / rect.height;
+    p = Math.max(0, Math.min(1, p));
+    tl.style.setProperty('--sun', p.toFixed(4));
+    if (itinSection) itinSection.style.background = dayColor(p);
+    const sunY = p * rect.height;
+    tl.querySelectorAll('.timeline-item').forEach(it => {
+      it.classList.toggle('upcoming', it.offsetTop > sunY + 4);
+    });
+  }
+  function onTlScroll() {
+    if (!tlTicking) { tlTicking = true; requestAnimationFrame(updateTimelineSun); }
+  }
+  window.addEventListener('scroll', onTlScroll, { passive: true });
+  window.addEventListener('resize', onTlScroll, { passive: true });
+  updateTimelineSun();
 </script>

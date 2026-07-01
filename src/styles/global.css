@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════ */
 
 /* ── Fonts ── */
-@import url('https://api.fontsource.org/v1/fonts/satoshi/latin-vietnamese/400,500,600,700,800/normal.css');
+/* Be Vietnam Pro được load qua <link> trong src/layouts/Base.astro (preconnect + display=swap) */
 
 :root {
   /* ── Primary: deep amber/honey ── */
@@ -95,7 +95,7 @@
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: 'Satoshi', system-ui, -apple-system, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--ink);
   overflow-x: hidden;
@@ -111,7 +111,7 @@ a { text-decoration: none; color: inherit; }
 button { font: inherit; cursor: pointer; border: none; background: none; }
 
 h1, h2, h3, h4 {
-  font-family: 'Satoshi', system-ui, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
