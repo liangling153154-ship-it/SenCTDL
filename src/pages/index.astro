@@ -66,12 +66,12 @@ const includes = [
 
 const faqs = [
   { q: 'Giá đã bao gồm những gì?', a: 'Vé xe khách khứ hồi, homestay phòng riêng, xe máy Honda Wave (đầy xăng, mũ, áo mưa, giá đỡ điện thoại), Travel Book và hotline hỗ trợ 24/7. Ăn sáng tại homestay có phụ phí; bữa trưa và tối tự chọn — Travel Book gợi ý quán cụ thể với giá tham khảo.' },
-  { q: 'Tôi có thể đi một mình không?', a: 'Hoàn toàn được. Phần lớn khách của chúng tôi đi một mình hoặc theo cặp. Lịch trình được thiết kế cho cả người đi solo.' },
-  { q: 'Tôi không biết đi xe máy thì sao?', a: 'Nhắn Zalo 0822946888 để được tư vấn phương án phù hợp — Sen sẽ hỗ trợ sắp xếp giúp bạn.' },
+  { q: 'Đi một mình được không?', a: 'Được. Nhiều bạn đi solo hoặc đi cặp. Lịch trình vẫn dễ theo.' },
+  { q: 'Không biết đi xe máy thì sao?', a: 'Nhắn Zalo 0822946888. Sen sẽ gợi ý phương án hợp với bạn.' },
   { q: 'Nếu trời mưa thì sao?', a: 'Travel Book có phương án dự phòng cho mỗi hoạt động. Ví dụ: trời mưa ở Bản Giốc → chuyển thời gian xuống chiều, sáng ghé chợ phiên hoặc làng nghề thay thế.' },
   { q: 'Có thể thay đổi lịch trình không?', a: 'Có. Travel Book là gợi ý tối ưu, không phải bắt buộc. Bạn tự do điều chỉnh — hotline luôn sẵn sàng hỗ trợ.' },
   { q: 'Thanh toán như thế nào?', a: 'Chuyển khoản ngân hàng hoặc MoMo. Đặt cọc 50%, thanh toán nốt trước ngày khởi hành 3 ngày.' },
-  { q: 'Hủy thì sao?', a: 'Hủy trước 7 ngày: hoàn 100%. Trước 3 ngày: hoàn 70%. Dưới 3 ngày: không hoàn. Chúng tôi cần confirm với đối tác.' },
+  { q: 'Hủy thì sao?', a: 'Hủy trước 7 ngày: hoàn 100%. Trước 3 ngày: hoàn 70%. Dưới 3 ngày: không hoàn. Sen cần confirm với đối tác.' },
 ];
 
 // Gallery masonry — trộn khoảnh khắc CHUYẾN ĐI + không gian HOMESTAY,
@@ -93,12 +93,18 @@ const gallery = [
   { src: 'images/gallery-23.jpg', alt: 'Bến thuyền nhỏ bên hồ xanh ngọc' },
   { src: 'images/gallery-15.jpg', alt: 'Chinh phục đồi cỏ hình chóp — điểm trek yêu thích' },
   { src: 'images/gallery-18.jpg', alt: 'Lặng ngắm núi Mắt Thần giữa buổi sớm' },
+  { src: 'images/gallery-26.jpg', alt: 'Đứng trước thác Bản Giốc hùng vĩ' },
+  { src: 'images/gallery-27.jpg', alt: 'Làng đá cổ Khuổi Ky nhìn từ trên cao' },
+  { src: 'images/gallery-28.jpg', alt: 'Lạc vào rừng trúc xanh mát' },
+  { src: 'images/gallery-29.jpg', alt: 'Ruộng bậc thang mùa lúa chín vàng' },
+  { src: 'images/gallery-30.jpg', alt: 'Hồ nước xanh ngọc bích giữa rừng già' },
+  { src: 'images/gallery-31.jpg', alt: 'Dang tay giữa hoàng hôn trên đồi cỏ' },
 ];
 ---
 
 <Base
-  title="Chương trình Du lịch Cao Bằng — Chuyến đi đã được thiết kế"
-  description="Không cần lên kế hoạch. Không cần lo lắng. Chọn chương trình, nhắn Zalo — chúng tôi lo mọi thứ từ xe, phòng, lịch trình đến quán ăn."
+  title="Du lịch Cao Bằng cùng Sen — khỏi tự lên kế hoạch"
+  description="Khỏi tự lên kế hoạch. Chọn combo, nhắn Zalo — xe, phòng, lịch trình, quán ăn: Sen lo hết."
 >
 
 <!-- ═══════ NAV ═══════ -->
@@ -109,7 +115,7 @@ const gallery = [
       <span>Sen's Homestay</span>
     </a>
     <div class="nav-links" id="navLinks">
-      <a href="#programs">Chương trình</a>
+      <a href="#programs">Chuyến đi</a>
       <a href="#map">Bản đồ</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
@@ -126,7 +132,7 @@ const gallery = [
 
 <!-- ═══════ MOBILE MENU ═══════ -->
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
-  <a href="#programs" class="mobile-menu-link">Chương trình</a>
+  <a href="#programs" class="mobile-menu-link">Chuyến đi</a>
   <a href="#map" class="mobile-menu-link">Bản đồ</a>
   <a href="#includes" class="mobile-menu-link">Bao gồm</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
@@ -163,18 +169,18 @@ const gallery = [
       Cao Bằng, Việt Nam
     </p>
     <h1 class="reveal reveal-delay-1">
-      Chuyến đi đã được<br/>
-      <span class="hero-accent">thiết kế cho bạn.</span>
+      Cao Bằng đã có<br/>
+      <span class="hero-accent">Sen lên lịch.</span>
     </h1>
     <p class="hero-sub reveal reveal-delay-2">
-      Không cần lên kế hoạch. Không cần lo lắng. Chọn chương trình — chúng tôi lo mọi thứ từ xe, phòng, lịch trình đến quán ăn.
+      Khỏi lên kế hoạch. Chọn combo, xách balo đi — xe, phòng, lịch trình, quán ăn: Sen lo hết.
     </p>
     <div class="hero-btns reveal reveal-delay-3">
       <a href={ZALO_LINK} class="btn btn-primary" target="_blank" rel="noopener">
-        Nhắn Zalo — Đặt chương trình
+        Nhắn Zalo — Đặt lịch
       </a>
       <a href="#programs" class="btn btn-outline hero-btn-outline">
-        Xem chương trình
+        Xem chuyến đi
       </a>
     </div>
   </div>
@@ -202,8 +208,8 @@ const gallery = [
         <div class="problem-answer reveal">
           <div class="problem-answer-line"></div>
           <p class="problem-answer-text">
-            <strong>Chúng tôi đã giải quyết tất cả.</strong><br/>
-            Bạn chỉ cần chọn chương trình. Mọi thứ còn lại đã được chuẩn bị.
+            <strong>Sen đã gỡ hết.</strong><br/>
+            Bạn chọn combo. Phần còn lại để Sen lo.
           </p>
         </div>
       </div>
@@ -246,8 +252,8 @@ const gallery = [
 <section id="programs" class="section-pad bg-surface">
   <div class="wrap">
     <div class="section-header reveal">
-      <h2>Chọn chương trình<br/>phù hợp với bạn</h2>
-      <p class="section-sub">Mỗi chương trình là một chuyến đi hoàn chỉnh — từ xe, phòng, lịch trình đến quán ăn. Bạn chỉ cần xách balo lên.</p>
+      <h2>Chọn chuyến đi<br/>hợp với bạn</h2>
+      <p class="section-sub">Mỗi combo đã có đủ xe, phòng, lịch trình và quán ăn. Bạn chỉ cần xách balo lên.</p>
     </div>
     <div class="programs-grid">
       {programs.map((p, i) => (
@@ -297,8 +303,8 @@ const gallery = [
 <section id="includes" class="section-pad bg-surface">
   <div class="wrap">
     <div class="section-header reveal">
-      <h2>Đã bao gồm<br/>trong chương trình</h2>
-      <p class="section-sub">Bạn không cần tự đặt từng thứ. Chúng tôi đã chuẩn bị sẵn.</p>
+      <h2>Đã bao gồm<br/>trong chuyến đi</h2>
+      <p class="section-sub">Bạn không cần tự đặt từng thứ. Sen chuẩn bị sẵn.</p>
     </div>
     <div class="includes-grid">
       {includes.map((item, i) => (
@@ -327,7 +333,7 @@ const gallery = [
     <div class="travelbook-layout">
       <div class="travelbook-text reveal">
         <h2>Sau khi đặt, bạn nhận<br/><span class="text-accent-light">Travel Book.</span></h2>
-        <p class="travelbook-sub">Một kịch bản chi tiết cho chuyến đi — thiết kế riêng cho lịch trình của bạn.</p>
+        <p class="travelbook-sub">Một lịch trình riêng cho chuyến đi của bạn.</p>
         <ul class="travelbook-list">
           <li>Timeline từng giờ, từng hoạt động</li>
           <li>Google Maps với tất cả điểm đến</li>
@@ -336,7 +342,7 @@ const gallery = [
           <li>Phương án dự phòng khi trời mưa</li>
           <li>Hotline hỗ trợ trong chuyến đi</li>
         </ul>
-        <a href={ZALO_LINK} class="btn btn-primary" target="_blank" rel="noopener">Nhận Travel Book — Nhắn Zalo</a>
+        <a href={ZALO_LINK} class="btn btn-primary" target="_blank" rel="noopener">Nhận Travel Book</a>
       </div>
       <div class="travelbook-visual reveal reveal-delay-1">
         <div class="travelbook-mockup">
@@ -383,7 +389,7 @@ const gallery = [
   <div class="wrap">
     <div class="section-header reveal">
       <h2>Góc nhìn Cao Bằng</h2>
-      <p class="section-sub">Những hình ảnh chân thực được ghi lại từ các chuyến đi của chúng tôi. Cao Bằng đẹp hoang sơ, hùng vĩ và bình dị.</p>
+      <p class="section-sub">Ảnh thật từ những chuyến Sen dẫn. Cao Bằng hoang sơ, hùng vĩ, bình dị.</p>
     </div>
     <div class="gallery-grid">
       {gallery.map((item, i) => item.video ? (
@@ -429,15 +435,15 @@ const gallery = [
       <div class="trust-statement">
         <h2>Người bạn địa phương<br/>của bạn ở Cao Bằng.</h2>
         <p class="trust-desc">
-          Chúng tôi không phải công ty tour. Không phải OTA. Chúng tôi là những người sống ở Cao Bằng, hiểu từng con đường, từng quán ăn, từng giờ đẹp nhất trong ngày. Mọi chương trình được thiết kế từ kinh nghiệm thực tế — không phải copy từ internet.
+          Sen không phải công ty tour. Không phải OTA. Sen sống ở Cao Bằng, thuộc từng con đường, quán ăn, khung giờ đẹp. Mỗi chuyến đi được xếp từ trải nghiệm thật — không copy internet.
         </p>
         <blockquote class="trust-quote">
-          Khách hỏi chúng tôi nhiều nhất không phải <em>"chỗ nào đẹp"</em> — mà là <em>"mấy giờ đi thì kịp?"</em>. Câu trả lời đó không có trên mạng. Nó nằm ở việc chúng tôi chạy những con đường này mỗi tuần.
+          Khách hỏi Sen nhiều nhất không phải <em>"chỗ nào đẹp"</em> — mà là <em>"mấy giờ đi thì kịp?"</em>. Câu trả lời đó nằm ở những cung đường Sen chạy mỗi tuần.
         </blockquote>
       </div>
       <figure class="trust-photo reveal reveal-delay-1">
         <img src="images/gallery-05.JPG" alt="Làng đá cổ Khuổi Ky của người Tày, Cao Bằng" loading="lazy" />
-        <figcaption>Làng đá Khuổi Ky — nơi chúng tôi hay dẫn khách ghé lúc chiều muộn, khi đá đổi màu theo nắng.</figcaption>
+        <figcaption>Làng đá Khuổi Ky — nơi Sen hay dẫn khách ghé lúc chiều muộn, khi đá đổi màu theo nắng.</figcaption>
       </figure>
     </div>
   </div>
@@ -473,11 +479,11 @@ const gallery = [
   </div>
   <div class="wrap cta-wrap">
     <div class="cta-content reveal">
-      <h2>Sẵn sàng chưa?</h2>
-      <p class="cta-sub">Nhắn Zalo cho chúng tôi — nói ngày bạn muốn đi, số người, và bao nhiêu ngày. Chúng tôi sẽ thiết kế chuyến đi cho bạn.</p>
+      <h2>Xách balo đi thôi?</h2>
+      <p class="cta-sub">Nhắn Zalo cho Sen — nói ngày đi, số người, và bạn muốn đi mấy ngày. Sen gợi ý lịch phù hợp.</p>
       <a href={ZALO_LINK} class="btn btn-primary btn-lg" target="_blank" rel="noopener">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.49 10.272v-.45h1.347v6.322h-.527a.825.825 0 0 1-.82-.826v-.005a3.076 3.076 0 0 1-1.81.582c-1.7 0-3.076-1.418-3.076-3.166s1.376-3.162 3.076-3.162a3.08 3.08 0 0 1 1.81.582v.123zm-1.667 4.727a1.975 1.975 0 0 0 0-3.95 1.975 1.975 0 0 0 0 3.95zM17.56 9.822h1.347v5.571a.825.825 0 0 1-.82.826h-.527V9.822zM18.234 7.5a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75z"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-4.438 12.958a.655.655 0 0 1-.19.014H5.654v-5.15h1.347v3.884h1.42l.015.015c.15.004.518.064.518.518v.184a.55.55 0 0 1-.394.535zm1.027-5.136a.875.875 0 1 1 0-1.75.875.875 0 0 1 0 1.75z"/></svg>
-        Nhắn Zalo — Đặt chương trình
+        Nhắn Zalo — Đặt lịch
       </a>
       <a href="tel:0822946888" class="cta-call">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -493,10 +499,10 @@ const gallery = [
   <div class="wrap footer-inner">
     <div class="footer-brand">
       <span class="footer-logo">Sen's Homestay</span>
-      <p class="footer-tagline">Chuyến đi đã được thiết kế.</p>
+      <p class="footer-tagline">Cao Bằng đã có Sen lo.</p>
     </div>
     <div class="footer-links">
-      <a href="#programs">Chương trình</a>
+      <a href="#programs">Chuyến đi</a>
       <a href="#map">Bản đồ</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>

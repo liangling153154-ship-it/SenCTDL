@@ -39,7 +39,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     <div class="detail-hero-overlay"></div>
   </div>
   <div class="wrap detail-hero-content">
-    <span class="hero-tag">Chương trình {program.days} Ngày</span>
+    <span class="hero-tag">Chuyến đi {program.days} ngày</span>
     <h1>{program.name}</h1>
     <p class="hero-tagline">{program.tagline}</p>
     <div class="hero-price">
@@ -71,7 +71,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   <div class="wrap">
     <div class="section-header">
       <h2>Dịch vụ đã lo trọn gói</h2>
-      <p class="section-sub">Chúng tôi thiết kế và vận hành từng chi tiết nhỏ nhất trong chuyến đi của bạn.</p>
+      <p class="section-sub">Từng chi tiết nhỏ đã có Sen lo.</p>
     </div>
     
     <div class="services-container">
@@ -87,7 +87,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         <button class="service-tab" role="tab" aria-selected="false" data-tab="motorbike">
           <img class="tab-img" src={`${base}${program.motorbikeInfo.image}`} alt="" loading="lazy" />
           <div class="tab-txt">
-            <strong>Xe máy thuê</strong>
+            <strong>Xe máy</strong>
             <span>Đầy bình xăng</span>
           </div>
         </button>
@@ -232,7 +232,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   <div class="wrap">
     <div class="section-header">
       <h2>Tuỳ chọn phương tiện</h2>
-      <p class="section-sub">Gói đã có sẵn lựa chọn tối ưu (✦). Bạn có thể nâng cấp nếu muốn — phụ thu minh bạch, xác nhận khi nhắn Zalo.</p>
+      <p class="section-sub">Mặc định là lựa chọn Sen thấy hợp. Muốn nâng cấp thì nhắn Zalo, phụ thu nói trước.</p>
     </div>
 
     <div class="vehicle-groups">
@@ -268,7 +268,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
           </div>
         </div>
       ))}
-      <p class="vehicle-note">Phụ thu được xác nhận lại khi bạn nhắn Zalo — không phát sinh ngoài báo giá.</p>
+      <p class="vehicle-note">Sen xác nhận phụ thu qua Zalo — không phát sinh ngoài báo giá.</p>
     </div>
   </div>
 </section>
@@ -278,8 +278,8 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   <div class="itin-mist" style={`background-image: url(${base}images/sky-texture.jpg)`} aria-hidden="true"></div>
   <div class="wrap">
     <div class="section-header center">
-      <h2>Lịch trình thiết kế chi tiết</h2>
-      <p class="section-sub">Được chuẩn bị chính xác theo giờ dựa trên trải nghiệm thực tế tốt nhất.</p>
+      <h2>Lịch trình theo giờ</h2>
+      <p class="section-sub">Sen sắp theo cung đường thực tế, để bạn đi vừa kịp vừa thong thả.</p>
     </div>
 
     <!-- Day Selector Tabs -->
@@ -426,8 +426,8 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 <!-- ═══════ FOOTER CTA ═══════ -->
 <section class="section-pad bg-dark footer-cta-section">
   <div class="wrap footer-cta-wrap">
-    <h2>Bạn muốn trải nghiệm chuyến đi này?</h2>
-    <p>Chỉ cần nhắn Zalo cho chúng tôi ngày đi và số người. Mọi kế hoạch, xe cộ, phòng ốc sẽ được thiết kế xong trong 5 phút.</p>
+    <h2>Bạn muốn đi chuyến này?</h2>
+    <p>Nhắn Zalo cho Sen ngày đi và số người. Sen ghép xe, phòng, lịch trình trong 5 phút.</p>
     <div class="cta-actions">
       <a href={ZALO_LINK} class="btn btn-primary btn-lg" target="_blank" rel="noopener">
         Nhắn Zalo — Đặt {program.name}
@@ -447,7 +447,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         <span>{program.priceNote}</span>
       </div>
     </div>
-    <a href={ZALO_LINK} class="btn btn-zalo" target="_blank" rel="noopener">Đặt lịch trình này</a>
+    <a href={ZALO_LINK} class="btn btn-zalo" target="_blank" rel="noopener">Đặt chuyến này</a>
   </div>
 </div>
 
