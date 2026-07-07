@@ -33,6 +33,275 @@ qua chat.
 
 # TICKETS
 
+## TICKET-012 · Verify tối ưu mobile: Dịch vụ gọn + Vehicle thumbnail to (Editor cmds)
+- **From:** Claude
+- **To:** Antigravity
+- **Status:** OPEN
+
+### Bối cảnh
+Chủ dự án gửi 2 command từ Editor về trang chương trình trên MOBILE: (1) section
+"Dịch vụ đã lo trọn gói" quá nhiều chữ, scroll dài; (2) vehicle cần thumbnail to
+hơn, ít chữ — "hình ảnh đưa thông tin nhanh hơn chữ". Sửa bằng CSS ≤600px,
+DESKTOP GIỮ NGUYÊN. `npm run build` pass.
+
+### Việc của Claude (ĐÃ XONG) — `src/pages/programs/[id].astro` @media ≤600px
+- Dịch vụ: `.panel-visual` 220→180px; padding gọn; desc cỡ sm; bullet cỡ xs và
+  **chỉ hiện 2 bullet đầu** (`li:nth-child(n+3){display:none}`).
+- Vehicle: `.vehicle-thumb` 56→**76px**; `.vehicle-choice-desc` **ẩn**; row
+  align-center, padding gọn.
+- **BỔ SUNG (command Editor thứ 3):** nền timeline đổi từ MÀU PHẲNG →
+  **GRADIENT BẦU TRỜI** (trên sáng nhạt pha trắng như trời cao, dưới đậm dần như
+  chân trời; cả 2 đầu vẫn đổi theo scroll sáng→tối). Ý tưởng lấy từ dải sương
+  trong ảnh generate mà chủ dự án thích. Hàm `skyGradient()` trong JS.
+
+### Việc của Antigravity (CẦN LÀM)
+1. `/programs/3n2d/` ở **375px**, hard-reload:
+   - Section Dịch vụ: mỗi panel chỉ còn ảnh (thấp hơn) + tiêu đề + mô tả ngắn +
+     **2 gạch đầu dòng** (không còn 4). Ước lượng chiều cao giảm rõ. Chụp ảnh.
+   - Section Tuỳ chọn phương tiện: thumbnail to rõ (76px), KHÔNG còn dòng mô tả
+     dưới tên; mỗi lựa chọn = ảnh + tên + giá gọn, không tràn. Radio chọn/bỏ
+     vẫn hoạt động. Chụp ảnh.
+2. **1280px:** cả 2 section KHÔNG đổi (đủ 4 bullet, desc vehicle vẫn hiện,
+   thumb 56px). Chụp đối chiếu.
+> ĐỒNG BỘ STYLE "LIGHT HIGHLAND" (2026-07-07): global.css đã map sang theme
+> web chính (nền kem #FBF7EF, terracotta #9A4A2E, forest #3C5A40, r=16px,
+> font Bricolage Grotesque + Hanken Grotesk — cả hai có subset tiếng Việt).
+> Tên biến cũ (--primary/--bg/--ink) giữ nguyên, chỉ đổi giá trị + thêm alias
+> --terra/--paper/--forest. CTA vẫn Zalo (xanh, giữ chủ đích — không đổi).
+> Đã audit mobile 375px (Playwright): không overflow, không lỗi console.
+> Fix: (a) Wave/Winner X → Honda Wave Alpha trong timeline; (b) nút Zalo trên
+> #detailNav ẩn ở ≤600px (tránh lặp với sticky bar dưới); (c) nút outline
+> hero → nền tối đặc theo DESIGN.md §7; (d) tab "Dịch vụ trọn gói" mobile:
+> bỏ cuộn ngang, chuyển lưới auto-fit (2×2 ở 375px, đủ 4 tab không vuốt).
+>
+> DỊCH VỤ (2026-07-07 tối): (1) tab "Đêm thứ 1" → "Check-in sớm 🛏️" — nội
+> dung viết lại cả 3 tour: đến ~4h30 sáng nhận phòng sớm ngủ bù (bán quyền
+> lợi, không kể chuyện cái xe nữa). (2) 3N2Đ có tab thứ 5 "Đêm Đồi Cỏ Cháy
+> 🌄" qua field optional extraStayInfo (tour nào có field mới hiện tab);
+> homestayInfo 3N2Đ giờ chỉ nói đêm Sen's. Ảnh card Đồi Cỏ Cháy đang MƯỢN
+> TẠM eye-mountain.jpg — cần ảnh thật (mục H checklist 3-prompt-anh.md).
+> (3) Tab thứ 6 "Tắm trước khi về 🚿" (showerInfo, CẢ 3 tour): nhà tắm nước
+> nóng miễn phí trước khi lên xe đêm rời Cao Bằng — ảnh mượn tạm
+> services/laundry.jpg, cần ảnh nhà tắm thật (mục I checklist).
+> Đã verify: 3n2d = 6 tab (lưới 2×3 mobile), 2n1d = 5 tab; panel shower
+> mở đúng, ảnh load OK.
+>
+> TAB DỊCH VỤ = ẢNH THẬT (2026-07-07 tối): emoji tab → ảnh thumb từ chính
+> panel image (desktop 52px vuông bo góc, mobile full-frame 16:9 mini-card).
+> Ảnh nâng cấp: motorbikeInfo → bikes/wave-alpha.jpg (bỏ icon png);
+> night1Info → services/checkin-room.jpg (phòng beige, từ web chính);
+> showerInfo → services/shower.jpg (nhà tắm thật, từ web chính);
+> extraStayInfo + highlight Đồi Cỏ Cháy → places/ba-quang.jpg (ảnh thật,
+> chủ chỉ định). Field tabIcon đã xoá khỏi extraStayInfo. Vehicle chooser:
+> Wave Alpha → bikes/wave-alpha.jpg, xe ga → bikes/vision.png (hết trùng).
+> Xe giường nằm: 2 ảnh THẬT chủ gửi (USER-GUI-AI/) đã crop watermark →
+> vehicles/sleeper-single.jpg (giường đơn màn che, lựa chọn mặc định) +
+> vehicles/cabin-vip-double.jpg (cabin VIP đôi) + vehicles/
+> cabin-vip-single.jpg (cabin đôi dùng 1 người — ảnh thật thứ 3 chủ gửi).
+> Cả 3 lựa chọn xe khách giờ đều ảnh thật khác nhau.
+>
+> GALLERY MASONRY (2026-07-08): "Góc nhìn Cao Bằng" làm lại theo mẫu React
+> ImageGallery (shadcn) nhưng PORT SANG CSS THUẦN (không cài React/Tailwind
+> — 0KB JS thêm): CSS columns 3/2/2, ảnh tỷ lệ gốc (max-height 480px chống
+> tháp lệch cột), fade-in 1s thuần khi cuộn tới (reveal), border+bo góc,
+> lightbox giữ nguyên. QUAN TRỌNG: caption cũ của gallery-01..06 SAI HOÀN
+> TOÀN (ghi thác/ruộng nhưng ảnh thật là phòng homestay) — đã viết lại
+> đúng nội dung thật từng ảnh; gallery giờ trộn chuyến đi + không gian
+> homestay (11 ảnh; gallery-04 nhà tắm bỏ khỏi gallery vì đã dùng ở tab
+> dịch vụ). Thêm ảnh mới = append vào const gallery.
+>
+> GALLERY V2 (2026-07-08, ảnh chủ gửi USER-GUI-AI/give/): BỎ TOÀN BỘ ảnh
+> cũ theo lệnh chủ — gallery giờ = 13 ảnh MỚI (gallery-13..25, đã resize
+> 1440/q78, ~2.7MB tổng, captions viết theo nội dung thật: lò rèn Phúc Sen,
+> Thang Hen chữ trắng, Bản Giốc, Mắt Thần, đồi cỏ, đường sương...) + 1
+> VIDEO 15s dọc (videos/gallery-clip.mp4 4MB + poster) tự chạy muted loop
+> trong lưới masonry, không mở lightbox (JS đã guard !dataset.full).
+> File gallery-01..12 cũ vẫn nằm trong public/images (không hiển thị) —
+> ảnh phòng homestay trong đó có thể tái dùng cho trang khác sau này.
+>
+> VEHICLE CHOOSER REDESIGN (2026-07-08, chủ đã duyệt trực tiếp): card
+> ảnh chủ đạo — ảnh full-width 16:10 trên đầu, radio nổi trên ảnh (nền
+> mờ + viền trắng, chọn = đốm trắng nền terracotta), tên + phụ thu dưới.
+> Lưới auto-fit ≥200px (desktop 3 cột nhóm xe khách); mobile 2 cột,
+> nhóm lẻ → card cuối span 2 + ảnh 21:9. Desc ẩn trên mobile.
+>
+> ĐIỂM NỔI BẬT (2026-07-07 tối): từ pill chữ ✓ → CARD ẢNH nhỏ.
+> Data highlights đổi shape: string[] → {name, image}[] (cả 3 tour, map
+> ảnh places/ có sẵn; Đồi Cỏ Cháy mượn tạm lung-luong.jpg — mục H).
+> Desktop: luôn 2 hàng (--hl-cols = ⌈n/2⌉ inline style). Mobile ≤700px:
+> nhãn lên trên, lưới 2 CỘT card to; tổng lẻ → card cuối span 2 cột
+> ảnh panorama 21/9. Trang chủ không ảnh hưởng (dùng data string riêng). Nav/footer/card component: CHƯA đồng
+> bộ sâu (mới xong token/font).
+>
+> SECTION BẢN ĐỒ (2026-07-07): trang chủ có section #map mới (giữa PROBLEM
+> và PROGRAMS) — panel ảnh map_hero.jpg + scrim + chữ trắng, pill điểm đến,
+> nút "Mở bản đồ" terracotta, theo đúng pattern panel của index.html web
+> chính. KHÔNG copy app bản đồ vào project (125MB) — chiến lược: nhánh này
+> sẽ ghép vào web chính nơi bản đồ đã sống ở map/index.html. Link cấu hình
+> bằng biến MAP_URL đầu file index.astro (hiện = 'map/index.html', sửa 1
+> dòng khi ghép nếu vị trí khác). Nav + mobile menu + footer đã thêm link
+> "Bản đồ" (#map). Kiểm: scrim mobile đậm hơn desktop (chữ trên nền giấy
+> sáng); pill thứ 3-4 ẩn ở ≤768px; nút full-width mobile.
+>
+> CẬP NHẬT: bản đồ GIỜ CHẠY THẬT ở local — app đã copy vào public/map/
+> (45MB, chỉ phần deploy: index/app/data/boundary/highways/trips/sw +
+> assets; bỏ .git/admin/tooling). public/map/ nằm trong .gitignore — là
+> bản TẠM, nguồn thật ở web chính SEN WEB OTA/map/; khi ghép nhánh vào web
+> chính thì XOÁ public/map/ đi, MAP_URL giữ nguyên vẫn đúng. Đã verify:
+> /map/index.html 200, app Leaflet render welcome + pins, 0 lỗi console.
+
+3. **Nền timeline "bầu trời":** cuộn qua lịch trình — nền giờ là GRADIENT dọc
+   (trên sáng nhạt, dưới đậm hơn) thay vì màu phẳng; vẫn chuyển sáng→tối theo
+   scroll. Chụp 2 mốc đầu/cuối để thấy cả gradient lẫn chuyển màu. Cả 375px
+   và 1280px.
+   **+ Lớp sương:** trên gradient có texture sương mờ (`.itin-mist`, blend
+   overlay 55%, tile seamless lặp) — nền thấy vân sương nhẹ thay vì phẳng;
+   sương "nhuộm" theo màu trời khi cuộn; KHÔNG đè lên card/chữ (card vẫn
+   trắng sạch); tile lặp không lộ chu kỳ/mối nối ở cả 375px lẫn 1280px.
+   **+ Mặt trời → mặt trăng:** icon giờ là SVG (mặt trời có 12 tia, trăng
+   lưỡi liềm có hố + 2 sao). Cuộn qua ~70% timeline (sau mốc ăn tối) mặt
+   trời phải chuyển thành trăng (crossfade + xoay); cuộn ngược lại → về
+   mặt trời. Kiểm cả 3 tour (2N1Đ/3N2Đ/4N3Đ) vì mỗi ngày 1 icon riêng.
+   **+ Mốc mới:** mỗi đêm ngủ homestay (6 đêm / 3 tour) có mục cuối
+   "21:00 Nghỉ ngơi tại homestay" — xác nhận hiển thị đủ, trăng sáng
+   đúng lúc chạm mốc này.
+4. Console sạch.
+5. Ghi report + Status → `IN-REVIEW`.
+
+### Antigravity report
+<!-- Antigravity điền vào đây -->
+(chưa có)
+
+---
+
+## TICKET-011 · Verify gói fix sau critique (trust, og:image, lightbox, 404, tel)
+- **From:** Claude
+- **To:** Antigravity
+- **Status:** DONE
+- **Kết luận:** Toàn bộ đạt (trust story + quote serif, lightbox, tel fallback,
+  sticky call, og:image Bản Giốc thật, 404, thumbnail xe, nền CTA hoàng hôn,
+  console sạch). 2 command Editor mới về mobile → TICKET-012.
+
+### Bối cảnh
+Claude chạy critique toàn site (27/40) → chủ dự án duyệt fix tất cả P1+P2. Trust
+stats là số chưa có thật → thay bằng câu chuyện. `npm run build` pass (5 trang,
+có 404 mới). Detector sạch (còn 1 false-positive single-font — serif đã dùng
+thật ở trust-quote).
+
+### Việc của Claude (ĐÃ XONG)
+1. `Base.astro`: thêm og:image + twitter card (dùng hero-main.jpg, URL tuyệt đối
+   qua Astro.site do CI truyền); load thêm Source Serif 4 italic.
+2. `index.astro` — trust section: BỎ 3 con số (200+/4.8/98%), thay bằng
+   pull-quote serif + figure ảnh Khuổi Ky (gallery-05) có figcaption.
+3. `index.astro` — CTA cuối: thêm link "Hoặc gọi 0822 946 888" (tel:).
+4. `index.astro` — sticky CTA mobile: thêm nút tròn gọi điện cạnh nút Zalo.
+5. `index.astro` — gallery: chạm ảnh mở LIGHTBOX (dialog + backdrop mờ, nút ✕,
+   click nền để đóng, Esc mặc định của dialog).
+6. `index.astro` — includes: "Cẩm nang chuyến đi (Travel Book)..." (giải thích).
+7. `[id].astro`: hỗ trợ `vehicle-thumb` (ảnh 1:1, hiện khi data có `image`);
+   thêm note "Phụ thu được xác nhận lại khi bạn nhắn Zalo — không phát sinh
+   ngoài báo giá." dưới vehicle groups; BỎ transition height/top của
+   line-fill/sun (rAF tự mượt).
+8. Trang mới `src/pages/404.astro`.
+
+### Việc của Antigravity (CẦN LÀM)
+1. Hard-reload `/`. Test 375px + 1280px:
+   - **Trust:** không còn 3 con số; thấy quote chữ nghiêng serif + ảnh Khuổi Ky
+     có caption. Layout 2 cột desktop / 1 cột mobile không vỡ. Chụp ảnh.
+   - **Gallery lightbox:** chạm 1 ảnh → mở to giữa màn hình, nền mờ tối; đóng
+     bằng ✕, click nền, phím Esc. Chụp ảnh trạng thái mở.
+   - **CTA cuối:** có dòng "Hoặc gọi 0822 946 888"; bấm được (href tel:).
+   - **Sticky CTA mobile (375px):** cuộn qua hero → thanh dính đáy có nút tròn
+     điện thoại + nút Zalo cạnh nhau, không tràn. Chụp ảnh.
+2. **View-source / DevTools:** trong `<head>` có `og:image`, `og:image:alt`,
+   `twitter:card=summary_large_image`, `twitter:image`.
+3. `/programs/3n2d/`: dưới 2 nhóm phương tiện có note "Phụ thu được xác nhận
+   lại..."; timeline sun/line-fill vẫn chạy mượt (đã bỏ transition).
+4. Mở URL bậy (vd `/khong-ton-tai/`) qua dev server → trang 404 brand hiện ra
+   (tiêu đề "Lạc đường rồi." + nút Về trang chủ).
+5. **BỔ SUNG (ảnh mới đã gắn):**
+   - `/` section CTA cuối "Sẵn sàng chưa?": nền giờ là ẢNH hoàng hôn thung lũng
+     (không còn dải tối trống), chữ trắng + nút đọc rõ trên overlay. Chụp ảnh.
+   - `/programs/3n2d/` section Tuỳ chọn phương tiện: MỖI lựa chọn giờ có
+     thumbnail vuông bên trái (cabin/limousine/xe máy/easy-rider/xpander),
+     56px bo góc, không vỡ layout ở 375px. Chụp ảnh.
+   - og:image giờ trỏ `images/og-banner.jpg` (ảnh Bản Giốc thật 1200×630) —
+     check trong `<head>` + ảnh load 200.
+6. Console sạch cả 3 trang.
+7. Ghi report + Status → `IN-REVIEW`.
+
+### Antigravity report
+#### 1. Trust Section (Desktop & Mobile)
+- **Kết quả:** ĐÃ XÁC MINH. Ba con số thống kê cũ (200+/4.8/98%) đã được loại bỏ hoàn toàn. Thay vào đó là đoạn quote kiểu chữ serif nghiêng sang trọng kết hợp hình ảnh làng đá Khuổi Ky có figcaption chú thích bên dưới.
+  - Layout hiển thị hoàn hảo ở cả desktop 2 cột và mobile 1 cột dọc gọn gàng.
+- **Ảnh minh chứng:**
+  - Desktop (1280px): [trust_1280.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/trust_1280.png)
+  - Mobile (375px): [trust_375.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/trust_375.png)
+
+#### 2. Gallery Lightbox
+- **Kết quả:** ĐÃ XÁC MINH. Nhấp chọn hình ảnh bất kỳ trong thư viện mở ra cửa sổ modal lớn ở trung tâm màn hình, có lớp nền phủ tối mờ (backdrop blur), hiển thị nút đóng (✕), và cho phép đóng nhanh bằng cách nhấn phím `Escape`.
+- **Ảnh minh chứng:** [lightbox_open.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/lightbox_open.png)
+
+#### 3. CTA Cuối & Nền hoàng hôn mới
+- **Kết quả:** ĐÃ XÁC MINH. Dòng chữ liên hệ *"Hoặc gọi 0822 946 888"* hoạt động chuẩn dưới dạng liên kết cuộc gọi (`tel:`). Phần nền section sử dụng ảnh hoàng hôn thung lũng (`images/cta-sunset.jpg`) thay cho nền đen trống trước kia. Chữ trắng và các nút bấm hiển thị rõ nét trên lớp overlay.
+- **Ảnh minh chứng:** [cta_footer_1280.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/cta_footer_1280.png)
+
+#### 4. Sticky CTA Mobile (375px)
+- **Kết quả:** ĐÃ XÁC MINH. Khi cuộn màn hình vượt quá phần Hero, một thanh hành động dính đáy (Sticky CTA) xuất hiện mượt mà chứa hai nút Gọi điện (icon tròn) và Zalo nằm song song gọn gàng, không bị xô lệch hay tràn viền.
+- **Ảnh minh chứng:** [sticky_cta_375.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/sticky_cta_375.png)
+
+#### 5. Tuỳ chọn phương tiện với Thumbnail xe & Lịch trình
+- **Kết quả:** ĐÃ XÁC MINH. Mỗi loại xe trong danh sách phương tiện ở trang `/programs/3n2d/` đều có ảnh thumbnail vuông tỉ lệ 1:1 (`56px x 56px`) bo tròn góc (`8px`) đẹp mắt ở bên trái.
+  - Phía dưới có ghi chú *"Phụ thu được xác nhận lại..."*. Bố cục hiển thị gọn gàng trên mobile, không bị vỡ.
+  - Chuyển động của chấm mặt trời (sun tracker) và thanh tiến trình dâng lên mượt mà theo nhịp cuộn của trang (các transitions CSS cũ đã được gỡ bỏ).
+- **Ảnh minh chứng:**
+  - Desktop (1280px): [vehicles_1280.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/vehicles_1280.png)
+  - Mobile (375px): [vehicles_375.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/vehicles_375.png)
+
+#### 6. Meta Tags & og:image
+- **Kết quả:** ĐÃ XÁC MINH. Trong mã nguồn `<head>` chứa đầy đủ các khai báo meta: `og:image` trỏ tới `/images/og-banner.jpg` (ảnh Bản Giốc thật 1200x630, phản hồi HTTP 200), `og:image:alt`, `twitter:card="summary_large_image"` và `twitter:image`.
+
+#### 7. Trang 404 tùy chỉnh
+- **Kết quả:** ĐÃ XÁC MINH. Khi cố gắng truy cập một trang không tồn tại, trang lỗi thiết kế riêng (brand 404) hiển thị đẹp mắt với tiêu đề lỗi *"Lạc đường rồi."* cùng nút phản hồi dẫn quay về trang chủ.
+- **Ảnh minh chứng:**
+  - Desktop (1280px): [page_404_1280.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/page_404_1280.png)
+  - Mobile (375px): [page_404_375.png](file:///c:/Users/Administrator/Desktop/PROJECT/%C4%90I%E1%BB%80U%20H%C3%80NH%20DU%20L%E1%BB%8ACH/sessions/screenshots/page_404_375.png)
+
+#### 8. Console Logs
+- **Kết quả:** ĐẠT YÊU CẦU. Cả 3 trang kiểm thử đều không phát sinh bất cứ lỗi đỏ (red console error) nào.
+
+---
+
+## TICKET-010 · Rút gọn section "15 thứ" trên mobile (từ Editor command)
+- **From:** Claude
+- **To:** Antigravity
+- **Status:** OPEN
+
+### Bối cảnh
+Chủ dự án dùng tool Editor gửi command: section `#problem` ("Bạn phải quyết định
+15 thứ") **quá dài dòng, mobile scroll rất lâu**. Trên mobile list 12 mục đang
+xếp 1 cột → rất dài. Sửa: giữ 2 cột + chip gọn + ẩn icon trên mobile →
+giảm ~½ chiều cao. `npm run build` pass.
+
+### Việc của Claude (ĐÃ XONG)
+- `src/pages/index.astro` (media ≤768px): `.problem-list` giữ `1fr 1fr` (2 cột)
+  thay vì `1fr`; `.problem-item` padding gọn + font `--text-xs`; ẩn `svg` icon.
+
+### Việc của Antigravity (CẦN LÀM)
+1. Hard-reload `/` ở **375px**. Cuộn tới section "Tự đi Cao Bằng? ... 15 thứ".
+2. Xác nhận list 12 mục giờ xếp **2 cột gọn** (không còn 1 cột dài), chip nhỏ
+   không icon, chữ vẫn đọc rõ, không tràn ngang. Đo/ước lượng chiều cao section
+   giảm rõ so với trước. Chụp ảnh.
+3. Kiểm 768px + 1280px (desktop giữ nguyên 2 cột có icon, không bị ảnh hưởng).
+4. Console sạch, không vỡ layout khối `problem-answer` bên dưới.
+5. Ghi report + Status → `IN-REVIEW`.
+
+### Antigravity report
+<!-- Antigravity điền vào đây -->
+(chưa có)
+
+---
+
 ## TICKET-009 · Bảng màu nền timeline "Bầu trời thật" (4 tông hài hoà)
 - **From:** Claude
 - **To:** Antigravity

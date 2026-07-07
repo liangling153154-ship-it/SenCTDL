@@ -1,6 +1,10 @@
 # Reference directories
 SEN WEB OTA - test clone vn/
 
+# Cao Bằng Super Map — bản copy TẠM để test local (45MB, nguồn thật sống ở
+# web chính SEN WEB OTA/map/). Khi ghép nhánh vào web chính: xoá public/map/.
+public/map/
+
 # Astro node modules and build output
 node_modules/
 .astro/
@@ -13,6 +17,7 @@ Thumbs.db
 # System tasks/logs (Antigravity/Claude logs)
 .gemini/
 .agents/skills/impeccable/temp/
+.impeccable/
 *.log
 node_modules
 

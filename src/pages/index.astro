@@ -3,76 +3,97 @@ import Base from '../layouts/Base.astro';
 
 const ZALO_LINK = 'https://zalo.me/0822946888';
 
-const programs = [
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+
+// Cao Bằng Travel Map (app Leaflet). Local/test: bản copy tạm ở public/map/
+// (gitignore). Khi ghép nhánh vào web chính: xoá public/map/, bản đồ thật
+// đã sống sẵn ở <web chính>/map/ — đường dẫn này giữ nguyên vẫn đúng.
+const MAP_URL = `${base}map/index.html`;
+
+// published: false → chưa phát hành, ẩn khỏi web (bật lại khi có nội dung thật)
+const allPrograms = [
   {
     id: '2n1d',
     name: '2 Ngày 1 Đêm',
-    tagline: 'Trải nghiệm nhanh, đủ tinh hoa',
-    price: '1.890.000đ',
-    priceNote: '/người',
-    highlights: ['Thác Bản Giốc', 'Động Ngườm Ngao', 'Mắt Thần núi', 'Homestay bản địa'],
+    tagline: 'Khám phá Cao Bằng hot nhất — tiết kiệm, chủ động',
+    price: '2.150.000đ',
+    priceNote: '/2 khách',
+    highlights: ['Thác Bản Giốc', 'Động Ngườm Ngao', 'Làng đá Khuổi Ky', 'Núi Mắt Thần', 'Hồ Thang Hen', 'Pác Bó'],
     days: 2,
     spots: 6,
+    published: true,
     image: 'images/places/ban-gioc.jpg',
   },
   {
     id: '3n2d',
     name: '3 Ngày 2 Đêm',
-    tagline: 'Được yêu thích nhất — đủ sâu, đủ chậm',
-    price: '2.690.000đ',
-    priceNote: '/người',
-    highlights: ['Thác Bản Giốc', 'Động Ngườm Ngao', 'Hồ Thang Hen', 'Làng đá Khuổi Ky', 'Chợ phiên địa phương', 'Xe máy khám phá'],
+    tagline: 'Được yêu thích nhất — Đồi Cỏ Cháy, Bản Giốc, Thang Hen, Pác Bó',
+    price: '2.850.000đ',
+    priceNote: '/2 khách',
+    highlights: ['Núi Mắt Thần', 'Đồi Cỏ Cháy', 'Thác Bản Giốc', 'Động Ngườm Ngao', 'Pỉ Pha Viewpoint', 'Hồ Thang Hen', 'Pác Bó'],
     days: 3,
     spots: 10,
     featured: true,
+    published: true,
     image: 'images/places/eye-mountain.jpg',
   },
   {
     id: '4n3d',
     name: '4 Ngày 3 Đêm',
     tagline: 'Khám phá sâu — đi chậm, thấy nhiều',
-    price: '3.490.000đ',
-    priceNote: '/người',
+    price: 'Liên hệ',
+    priceNote: 'giá tuỳ chỉnh theo nhóm',
     highlights: ['Tất cả điểm 3N2Đ', 'Pác Bó', 'Phja Oắc', 'Cốc Bó suối Lê-nin', 'Đèo Mã Phục', 'Cafe núi'],
     days: 4,
     spots: 14,
+    published: false,
     image: 'images/places/khau-coc-cha.jpg',
   },
 ];
+const programs = allPrograms.filter(p => p.published);
 
 
 
 const includes = [
-  { icon: 'bus', title: 'Vé xe khách', desc: 'Limousine Hà Nội — Cao Bằng khứ hồi' },
-  { icon: 'bike', title: 'Xe máy', desc: 'Honda Wave/Winner X, đầy xăng, áo mưa' },
-  { icon: 'home', title: 'Homestay', desc: 'Phòng riêng, sàn gỗ, chăn ấm, wifi' },
-  { icon: 'utensils', title: 'Ăn sáng', desc: 'Mỗi sáng tại quán được chọn' },
-  { icon: 'map', title: 'Lịch trình tối ưu', desc: 'Travel Book chi tiết từng giờ' },
-  { icon: 'phone', title: 'Hotline 24/7', desc: 'Hỗ trợ suốt chuyến đi' },
-  { icon: 'shield', title: 'Phương án dự phòng', desc: 'Kế hoạch B khi trời mưa' },
-  { icon: 'gift', title: 'Bonus', desc: 'Bản đồ offline, gợi ý quán ăn, góc chụp đẹp' },
+  { icon: 'bus', title: 'Vé xe khách', desc: 'Xe giường nằm / cabin VIP Hà Nội ⇆ Cao Bằng khứ hồi' },
+  { icon: 'bike', title: 'Xe máy', desc: 'Honda Wave Alpha, đầy xăng, mũ + áo mưa + giá đỡ điện thoại' },
+  { icon: 'home', title: 'Sen\'s Homestay', desc: 'Phòng riêng, điều hoà, nóng lạnh, máy chiếu Netflix' },
+  { icon: 'map', title: 'Lịch trình tối ưu', desc: 'Cẩm nang chuyến đi (Travel Book) chi tiết từng giờ' },
+  { icon: 'phone', title: 'Hotline 24/7', desc: 'Hỗ trợ suốt chuyến đi qua Zalo 0822946888' },
+  { icon: 'shield', title: 'Phương án dự phòng', desc: 'Kế hoạch B khi trời mưa cho từng điểm' },
+  { icon: 'gift', title: 'Bonus', desc: 'Bản đồ tham quan, gợi ý quán ăn, góc chụp đẹp' },
 ];
 
 const faqs = [
-  { q: 'Giá đã bao gồm những gì?', a: 'Vé xe khách khứ hồi, homestay, xe máy, ăn sáng, Travel Book, và hotline hỗ trợ 24/7. Bữa trưa và tối tự chọn — Travel Book gợi ý quán cụ thể với giá tham khảo.' },
+  { q: 'Giá đã bao gồm những gì?', a: 'Vé xe khách khứ hồi, homestay phòng riêng, xe máy Honda Wave (đầy xăng, mũ, áo mưa, giá đỡ điện thoại), Travel Book và hotline hỗ trợ 24/7. Ăn sáng tại homestay có phụ phí; bữa trưa và tối tự chọn — Travel Book gợi ý quán cụ thể với giá tham khảo.' },
   { q: 'Tôi có thể đi một mình không?', a: 'Hoàn toàn được. Phần lớn khách của chúng tôi đi một mình hoặc theo cặp. Lịch trình được thiết kế cho cả người đi solo.' },
-  { q: 'Tôi không biết đi xe máy thì sao?', a: 'Có thể chọn option Easy Rider — tài xế địa phương chở bạn. Hoặc chọn chương trình ô tô (sắp ra mắt).' },
+  { q: 'Tôi không biết đi xe máy thì sao?', a: 'Nhắn Zalo 0822946888 để được tư vấn phương án phù hợp — Sen sẽ hỗ trợ sắp xếp giúp bạn.' },
   { q: 'Nếu trời mưa thì sao?', a: 'Travel Book có phương án dự phòng cho mỗi hoạt động. Ví dụ: trời mưa ở Bản Giốc → chuyển thời gian xuống chiều, sáng ghé chợ phiên hoặc làng nghề thay thế.' },
   { q: 'Có thể thay đổi lịch trình không?', a: 'Có. Travel Book là gợi ý tối ưu, không phải bắt buộc. Bạn tự do điều chỉnh — hotline luôn sẵn sàng hỗ trợ.' },
   { q: 'Thanh toán như thế nào?', a: 'Chuyển khoản ngân hàng hoặc MoMo. Đặt cọc 50%, thanh toán nốt trước ngày khởi hành 3 ngày.' },
   { q: 'Hủy thì sao?', a: 'Hủy trước 7 ngày: hoàn 100%. Trước 3 ngày: hoàn 70%. Dưới 3 ngày: không hoàn. Chúng tôi cần confirm với đối tác.' },
 ];
 
+// Gallery masonry — trộn khoảnh khắc CHUYẾN ĐI + không gian HOMESTAY,
+// xen kẽ ảnh dọc/ngang tạo nhịp. Caption viết theo nội dung THẬT của ảnh.
+// Thêm ảnh mới: chỉ cần append vào đây. (gallery-04 = nhà tắm, đã dùng ở
+// tab dịch vụ nên không lặp lại ở đây.) item.video = clip tự chạy trong lưới.
 const gallery = [
-  { src: 'images/gallery-01.jpg', alt: 'Cảnh quan thác Bản Giốc hùng vĩ vùng biên giới' },
-  { src: 'images/gallery-02.jpg', alt: 'Ruộng bậc thang uốn lượn chín vàng' },
-  { src: 'images/gallery-03.jpg', alt: 'Đèo Khâu Cốc Chà 15 tầng dốc uốn khúc' },
-  { src: 'images/gallery-04.jpg', alt: 'Dòng sông Quây Sơn trong xanh chảy dọc biên cương' },
-  { src: 'images/gallery-05.JPG', alt: 'Làng đá cổ Khuổi Ky của người Tày' },
-  { src: 'images/gallery-06.JPG', alt: 'Hồ Thang Hen xanh ngọc bích phẳng lặng giữa lòng thung lũng' },
+  { src: 'images/gallery-13.jpg', alt: 'Lò rèn truyền thống làng Phúc Sen của người Nùng An' },
+  { src: 'images/gallery-22.jpg', alt: 'Hồ Thang Hen và núi Quan Tử nhìn từ mặt nước' },
+  { src: 'images/gallery-24.jpg', alt: 'Chân thác Bản Giốc mùa nước đổ' },
+  { video: 'videos/gallery-clip.mp4', poster: 'images/gallery-clip-poster.jpg', alt: 'Khoảnh khắc Cao Bằng — clip ngắn từ chuyến đi' },
+  { src: 'images/gallery-14.jpg', alt: 'Nhóm bạn check-in trên đồi cỏ xanh Cao Bằng' },
+  { src: 'images/gallery-20.jpg', alt: 'Mây mù vờn núi sau cơn mưa chiều' },
+  { src: 'images/gallery-16.jpg', alt: 'Núi Mắt Thần soi bóng bên hồ và vó cá' },
+  { src: 'images/gallery-25.jpg', alt: 'Con đường uốn lượn qua thung lũng núi đá' },
+  { src: 'images/gallery-19.jpg', alt: 'Người dân cưỡi ngựa qua thảo nguyên dưới chân núi Thủng' },
+  { src: 'images/gallery-21.jpg', alt: 'Cung đường sương mù trên đường về bản' },
+  { src: 'images/gallery-17.jpg', alt: 'Thung lũng đồi cỏ trập trùng như tranh vẽ' },
+  { src: 'images/gallery-23.jpg', alt: 'Bến thuyền nhỏ bên hồ xanh ngọc' },
+  { src: 'images/gallery-15.jpg', alt: 'Chinh phục đồi cỏ hình chóp — điểm trek yêu thích' },
+  { src: 'images/gallery-18.jpg', alt: 'Lặng ngắm núi Mắt Thần giữa buổi sớm' },
 ];
-
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 ---
 
 <Base
@@ -89,6 +110,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     </a>
     <div class="nav-links" id="navLinks">
       <a href="#programs">Chương trình</a>
+      <a href="#map">Bản đồ</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
       <a href={ZALO_LINK} class="btn btn-zalo nav-cta" target="_blank" rel="noopener">
@@ -105,6 +127,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 <!-- ═══════ MOBILE MENU ═══════ -->
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
   <a href="#programs" class="mobile-menu-link">Chương trình</a>
+  <a href="#map" class="mobile-menu-link">Bản đồ</a>
   <a href="#includes" class="mobile-menu-link">Bao gồm</a>
   <a href="#faq" class="mobile-menu-link">FAQ</a>
   <a href={ZALO_LINK} class="btn btn-zalo mobile-menu-cta" target="_blank" rel="noopener">
@@ -185,6 +208,37 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ═══════ TRAVEL MAP ═══════ -->
+<section id="map" class="section-pad">
+  <div class="wrap">
+    <a href={MAP_URL} class="map-panel reveal" aria-label="Mở bản đồ Cao Bằng tương tác">
+      <img src={`${base}images/map_hero.jpg`} alt="Bản đồ Cao Bằng ghim tay các điểm: Bản Giốc, Ngườm Ngao, Núi Mắt Thần, Ba Quang" loading="lazy" />
+      <div class="map-scrim"></div>
+      <span class="map-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        Bản đồ
+      </span>
+      <div class="map-overlay">
+        <span class="map-flag">Tương tác · Người bản địa vẽ tay</span>
+        <h2>Bản đồ Cao Bằng<br/>của riêng Sen</h2>
+        <p>45 điểm được Sen ghim tay — từng con thác, hang động, quán cà phê và cung đường thật sự đáng đi. Kèm 3 lộ trình vẽ sẵn với khoảng cách &amp; thời gian chạy thực tế.</p>
+        <div class="map-foot">
+          <div class="map-tags">
+            <span class="map-pin">Thác Bản Giốc</span>
+            <span class="map-pin">Núi Mắt Thần</span>
+            <span class="map-pin">Ngườm Ngao</span>
+            <span class="map-pin">Ba Quang</span>
+          </div>
+          <span class="map-open btn btn-primary">
+            Mở bản đồ
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -332,17 +386,41 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
       <p class="section-sub">Những hình ảnh chân thực được ghi lại từ các chuyến đi của chúng tôi. Cao Bằng đẹp hoang sơ, hùng vĩ và bình dị.</p>
     </div>
     <div class="gallery-grid">
-      {gallery.map((item, i) => (
-        <div class="gallery-item reveal" style={`--i: ${i}`}>
+      {gallery.map((item, i) => item.video ? (
+        <div class="gallery-item gallery-video reveal" style={`--i: ${i}`}>
+          <video
+            src={item.video}
+            poster={item.poster}
+            class="gallery-img"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-label={item.alt}
+          ></video>
+          <div class="gallery-caption">
+            <span>▶ {item.alt}</span>
+          </div>
+        </div>
+      ) : (
+        <button type="button" class="gallery-item reveal" style={`--i: ${i}`} data-full={item.src} data-alt={item.alt} aria-label={`Xem ảnh lớn: ${item.alt}`}>
           <img src={item.src} alt={item.alt} class="gallery-img" loading="lazy" />
           <div class="gallery-caption">
             <span>{item.alt}</span>
           </div>
-        </div>
+        </button>
       ))}
     </div>
   </div>
 </section>
+
+<!-- Lightbox -->
+<dialog id="lightbox" class="lightbox">
+  <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Đóng">✕</button>
+  <img id="lightboxImg" alt="" />
+  <p id="lightboxCaption" class="lightbox-caption"></p>
+</dialog>
 
 <!-- ═══════ TRUST ═══════ -->
 <section id="trust" class="section-pad">
@@ -353,21 +431,14 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         <p class="trust-desc">
           Chúng tôi không phải công ty tour. Không phải OTA. Chúng tôi là những người sống ở Cao Bằng, hiểu từng con đường, từng quán ăn, từng giờ đẹp nhất trong ngày. Mọi chương trình được thiết kế từ kinh nghiệm thực tế — không phải copy từ internet.
         </p>
+        <blockquote class="trust-quote">
+          Khách hỏi chúng tôi nhiều nhất không phải <em>"chỗ nào đẹp"</em> — mà là <em>"mấy giờ đi thì kịp?"</em>. Câu trả lời đó không có trên mạng. Nó nằm ở việc chúng tôi chạy những con đường này mỗi tuần.
+        </blockquote>
       </div>
-      <div class="trust-numbers">
-        <div class="trust-stat reveal reveal-delay-1">
-          <span class="trust-stat-number">200+</span>
-          <span class="trust-stat-label">chuyến đi đã thiết kế</span>
-        </div>
-        <div class="trust-stat reveal reveal-delay-2">
-          <span class="trust-stat-number">4.8</span>
-          <span class="trust-stat-label">đánh giá trên Google</span>
-        </div>
-        <div class="trust-stat reveal reveal-delay-3">
-          <span class="trust-stat-number">98%</span>
-          <span class="trust-stat-label">khách hài lòng</span>
-        </div>
-      </div>
+      <figure class="trust-photo reveal reveal-delay-1">
+        <img src="images/gallery-05.JPG" alt="Làng đá cổ Khuổi Ky của người Tày, Cao Bằng" loading="lazy" />
+        <figcaption>Làng đá Khuổi Ky — nơi chúng tôi hay dẫn khách ghé lúc chiều muộn, khi đá đổi màu theo nắng.</figcaption>
+      </figure>
     </div>
   </div>
 </section>
@@ -396,6 +467,10 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 
 <!-- ═══════ FINAL CTA ═══════ -->
 <section id="cta" class="section-pad bg-dark">
+  <div class="cta-bg" aria-hidden="true">
+    <img src="images/cta-sunset.jpg" alt="" loading="lazy" />
+    <div class="cta-bg-overlay"></div>
+  </div>
   <div class="wrap cta-wrap">
     <div class="cta-content reveal">
       <h2>Sẵn sàng chưa?</h2>
@@ -403,6 +478,10 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
       <a href={ZALO_LINK} class="btn btn-primary btn-lg" target="_blank" rel="noopener">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.49 10.272v-.45h1.347v6.322h-.527a.825.825 0 0 1-.82-.826v-.005a3.076 3.076 0 0 1-1.81.582c-1.7 0-3.076-1.418-3.076-3.166s1.376-3.162 3.076-3.162a3.08 3.08 0 0 1 1.81.582v.123zm-1.667 4.727a1.975 1.975 0 0 0 0-3.95 1.975 1.975 0 0 0 0 3.95zM17.56 9.822h1.347v5.571a.825.825 0 0 1-.82.826h-.527V9.822zM18.234 7.5a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75z"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-4.438 12.958a.655.655 0 0 1-.19.014H5.654v-5.15h1.347v3.884h1.42l.015.015c.15.004.518.064.518.518v.184a.55.55 0 0 1-.394.535zm1.027-5.136a.875.875 0 1 1 0-1.75.875.875 0 0 1 0 1.75z"/></svg>
         Nhắn Zalo — Đặt chương trình
+      </a>
+      <a href="tel:0822946888" class="cta-call">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Hoặc gọi 0822 946 888
       </a>
       <p class="cta-note">Trả lời trong 5 phút · Tư vấn miễn phí</p>
     </div>
@@ -418,6 +497,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     </div>
     <div class="footer-links">
       <a href="#programs">Chương trình</a>
+      <a href="#map">Bản đồ</a>
       <a href="#includes">Bao gồm</a>
       <a href="#faq">FAQ</a>
     </div>
@@ -431,6 +511,9 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 
 <!-- ═══════ MOBILE STICKY CTA ═══════ -->
 <div class="sticky-cta" id="stickyCta">
+  <a href="tel:0822946888" class="btn sticky-call-btn" aria-label="Gọi 0822 946 888">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+  </a>
   <a href={ZALO_LINK} class="btn btn-zalo sticky-cta-btn" target="_blank" rel="noopener">
     <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12.49 10.272v-.45h1.347v6.322h-.527a.825.825 0 0 1-.82-.826v-.005a3.076 3.076 0 0 1-1.81.582c-1.7 0-3.076-1.418-3.076-3.166s1.376-3.162 3.076-3.162a3.08 3.08 0 0 1 1.81.582v.123zm-1.667 4.727a1.975 1.975 0 0 0 0-3.95 1.975 1.975 0 0 0 0 3.95z"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>
     Nhắn Zalo — Đặt ngay
@@ -651,14 +734,17 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   gap: 12px;
   flex-wrap: wrap;
 }
+/* Over-photo: nền tối đặc + viền trắng rõ (theo DESIGN.md §7 dark-solid badge) */
 .hero-btn-outline {
-  background: oklch(1 0 0 / 0.12);
-  box-shadow: inset 0 0 0 2px oklch(1 0 0 / 0.45);
+  background: rgba(20, 15, 10, 0.55);
+  box-shadow: inset 0 0 0 1.5px oklch(1 0 0 / 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   color: white;
 }
 .hero-btn-outline:hover {
-  background: oklch(1 0 0 / 0.25);
-  box-shadow: inset 0 0 0 2px oklch(1 0 0 / 0.7);
+  background: rgba(20, 15, 10, 0.7);
+  box-shadow: inset 0 0 0 1.5px oklch(1 0 0 / 0.9);
   color: white;
 }
 .hero-scroll {
@@ -749,6 +835,129 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   color: var(--ink);
 }
 .problem-answer-text strong { color: var(--primary-hover); }
+
+/* ═══════ TRAVEL MAP (panel theo pattern web chính) ═══════ */
+.map-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  min-height: 520px;
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+.map-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.map-panel > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--ease-out);
+}
+.map-panel:hover > img { transform: scale(1.03); }
+/* Scrim: tối chủ yếu sau chữ (dưới/trái), phần còn lại giữ sáng — DESIGN.md §7 */
+.map-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(24,20,14,0.18) 0%, rgba(24,20,14,0) 35%, rgba(24,20,14,0.72) 100%),
+    linear-gradient(90deg, rgba(24,20,14,0.35) 0%, rgba(24,20,14,0.05) 55%, transparent 100%);
+}
+/* Badge góc: dark-solid trên ảnh */
+.map-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(20, 15, 10, 0.72);
+  border: 1px solid rgba(246, 239, 226, 0.22);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--dark-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: var(--r-pill);
+}
+.map-badge svg { width: 15px; height: 15px; }
+.map-overlay {
+  position: relative;
+  z-index: var(--z-base);
+  padding: var(--space-xl);
+  max-width: 640px;
+}
+.map-flag {
+  display: inline-block;
+  color: #F2C28E;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
+  text-shadow: 0 1px 3px rgba(16, 12, 6, 0.6);
+}
+.map-overlay h2 {
+  color: #fff;
+  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  margin-bottom: 12px;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 1px rgba(16, 12, 6, 0.45);
+  text-shadow: 0 1px 2px rgba(16,12,6,0.6), 0 2px 8px rgba(16,12,6,0.5);
+}
+.map-overlay p {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: var(--text-base);
+  max-width: 56ch;
+  margin-bottom: var(--space-md);
+  text-shadow: 0 1px 3px rgba(16, 12, 6, 0.55);
+}
+.map-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.map-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.map-pin {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(20, 15, 10, 0.55);
+  border: 1px solid rgba(246, 239, 226, 0.25);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  color: var(--dark-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+}
+.map-open { flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .map-panel { min-height: 560px; }
+  /* Mobile: cột chữ cao hơn → scrim dọc phải đậm sớm hơn để chữ nổi trên nền giấy sáng */
+  .map-scrim {
+    background:
+      linear-gradient(180deg, rgba(24,20,14,0.22) 0%, rgba(24,20,14,0.5) 38%, rgba(24,20,14,0.84) 100%);
+  }
+  .map-overlay { padding: var(--space-lg); }
+  .map-foot { flex-direction: column; align-items: stretch; }
+  .map-open { width: 100%; }
+  /* Mobile: giữ 2 pin đầu cho gọn màn hình hẹp */
+  .map-pin:nth-child(n+3) { display: none; }
+}
 
 /* ═══════ PROGRAMS ═══════ */
 .programs-grid {
@@ -1089,27 +1298,78 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
 }
 
 /* ═══════ GALLERY ═══════ */
+/* Masonry kiểu Pinterest: ảnh giữ tỷ lệ gốc (dọc/ngang xen kẽ),
+   fade-in 1s khi cuộn tới — port từ mẫu React ImageGallery sang CSS thuần */
 .gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
+  columns: 3;
+  column-gap: var(--space-md);
 }
 .gallery-item {
   position: relative;
+  display: block;
+  width: 100%;
+  margin-bottom: var(--space-md);
+  break-inside: avoid;
   border-radius: var(--r-lg);
   overflow: hidden;
-  aspect-ratio: 4 / 3;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  border: 1px solid var(--line);
+  background: var(--surface-raised); /* placeholder khi ảnh chưa tải */
+  padding: 0;
+  cursor: zoom-in;
+  text-align: left;
+  transition: opacity 1s ease-in-out, transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
   transition-delay: calc(var(--i, 0) * 60ms);
+}
+/* Reveal của gallery = fade thuần như mẫu (không trượt dọc) */
+.gallery-item.reveal { transform: none; }
+.gallery-item.reveal.visible { transform: none; }
+/* Item video: clip tự chạy trong lưới, không zoom lightbox */
+.gallery-video { cursor: default; }
+
+/* ── Lightbox ── */
+.lightbox {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: min(92vw, 1100px);
+  max-height: 90vh;
+}
+.lightbox::backdrop {
+  background: oklch(0.1 0.01 55 / 0.85);
+  backdrop-filter: blur(4px);
+}
+.lightbox img {
+  width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--r);
+}
+.lightbox-caption {
+  color: white;
+  text-align: center;
+  font-size: var(--text-sm);
+  margin-top: 10px;
+}
+.lightbox-close {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  transform: translateY(-100%);
+  color: white;
+  font-size: 1.2rem;
+  padding: 8px;
+  background: none;
 }
 .gallery-item:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+  transition-delay: 0s; /* hover phản hồi ngay, không ăn delay stagger */
 }
 .gallery-img {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto; /* giữ tỷ lệ gốc của ảnh — tạo nhịp masonry */
+  max-height: 480px; /* chặn ảnh dọc quá cao làm lệch cân bằng cột */
   object-fit: cover;
   transition: transform 0.6s var(--ease-out);
 }
@@ -1133,14 +1393,13 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   transform: translateY(0);
 }
 @media (max-width: 900px) {
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .gallery-grid { columns: 2; }
 }
 @media (max-width: 600px) {
-  .gallery-grid {
-    grid-template-columns: 1fr;
-  }
+  /* Mobile giữ 2 cột masonry — dày ảnh kiểu Pinterest */
+  .gallery-grid { columns: 2; column-gap: 10px; }
+  .gallery-item { margin-bottom: 10px; }
+  .gallery-caption { padding: var(--space-sm); font-size: var(--text-xs); }
 }
 
 /* ═══════ TRUST ═══════ */
@@ -1159,29 +1418,32 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   font-size: var(--text-base);
   line-height: 1.7;
 }
-.trust-numbers {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+.trust-quote {
+  margin-top: var(--space-lg);
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-style: italic;
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 46ch;
 }
-.trust-stat {
-  text-align: center;
-  padding: var(--space-lg);
-  background: var(--surface);
-  border-radius: var(--r);
+.trust-quote em { color: var(--primary-hover); font-style: italic; }
+.trust-photo {
+  margin: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
-.trust-stat-number {
-  display: block;
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  color: var(--primary);
-  line-height: 1;
-  margin-bottom: 4px;
+.trust-photo img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
 }
-.trust-stat-label {
+.trust-photo figcaption {
+  padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   color: var(--muted);
-  font-weight: 500;
+  background: var(--surface);
 }
 
 /* ═══════ FAQ ═══════ */
@@ -1222,7 +1484,27 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
 }
 
 /* ═══════ FINAL CTA ═══════ */
-.cta-wrap { text-align: center; }
+#cta {
+  position: relative;
+  overflow: hidden;
+}
+.cta-bg {
+  position: absolute;
+  inset: 0;
+}
+.cta-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cta-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, oklch(0.16 0.02 55 / 0.35) 0%, oklch(0.16 0.02 55 / 0.62) 100%);
+}
+.cta-wrap { text-align: center; position: relative; z-index: var(--z-raised); }
+#cta .cta-sub { color: oklch(0.93 0.01 55); text-shadow: 0 1px 4px oklch(0.1 0.02 55 / 0.5); }
+#cta h2 { text-shadow: 0 2px 8px oklch(0.1 0.02 55 / 0.5); }
 .cta-content h2 {
   color: white;
   font-size: var(--text-3xl);
@@ -1238,6 +1520,19 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   padding: 20px 40px;
   font-size: var(--text-lg);
 }
+.cta-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--space-md);
+  margin-left: var(--space-md);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--dark-text);
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+.cta-call:hover { opacity: 1; color: white; }
 .cta-note {
   margin-top: var(--space-md);
   font-size: var(--text-sm);
@@ -1316,7 +1611,20 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   transition: transform 0.4s var(--ease-out);
 }
 .sticky-cta.visible { transform: translateY(0); }
-.sticky-cta-btn { width: 100%; text-align: center; }
+.sticky-cta-btn { flex: 1; text-align: center; }
+.sticky-call-btn {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--primary);
+}
 
 /* ═══════ RESPONSIVE ═══════ */
 @media (max-width: 900px) {
@@ -1324,27 +1632,25 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
   .problem-layout { grid-template-columns: 1fr; gap: var(--space-xl); }
   .travelbook-layout { grid-template-columns: 1fr; }
   .trust-layout { grid-template-columns: 1fr; }
-  .trust-numbers { flex-direction: row; }
-  .trust-stat { flex: 1; }
 }
 
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .nav-hamburger { display: flex; }
-  .sticky-cta { display: block; }
+  .sticky-cta { display: flex; gap: 10px; align-items: center; }
 
   #hero { min-height: 85vh; min-height: 85dvh; padding-bottom: var(--space-2xl); }
   #hero h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); }
 
-  .problem-list { grid-template-columns: 1fr; }
+  /* Giữ 2 cột + chip gọn để không kéo dài scroll trên mobile */
+  .problem-list { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .problem-item { padding: 8px 10px; font-size: var(--text-xs); gap: 6px; }
+  .problem-item svg { display: none; }
 
   .timeline { padding-left: 48px; }
   .timeline-line { left: 18px; }
   .timeline-marker { left: -48px; width: 36px; }
   .timeline-time { font-size: 0.65rem; }
-
-  .trust-numbers { flex-direction: column; }
-  .trust-numbers .trust-stat { flex: none; }
 
   .footer-inner { flex-direction: column; align-items: flex-start; }
   .footer-links { flex-wrap: wrap; }
@@ -1412,6 +1718,25 @@ nav.scrolled .nav-hamburger span { background: var(--ink); }
     { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
   );
   reveals.forEach(el => observer.observe(el));
+
+  // Gallery lightbox
+  const lightbox = document.getElementById('lightbox') as HTMLDialogElement;
+  const lightboxImg = document.getElementById('lightboxImg') as HTMLImageElement;
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  document.querySelectorAll<HTMLElement>('.gallery-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (!lightbox || !lightboxImg) return;
+      if (!item.dataset.full) return; // item video: không mở lightbox
+      lightboxImg.src = item.dataset.full || '';
+      lightboxImg.alt = item.dataset.alt || '';
+      if (lightboxCaption) lightboxCaption.textContent = item.dataset.alt || '';
+      lightbox.showModal();
+    });
+  });
+  document.getElementById('lightboxClose')?.addEventListener('click', () => lightbox?.close());
+  lightbox?.addEventListener('click', (e) => {
+    if (e.target === lightbox) lightbox.close();
+  });
 
   // Sticky CTA on mobile (show after scrolling past hero)
   const stickyCta = document.getElementById('stickyCta');

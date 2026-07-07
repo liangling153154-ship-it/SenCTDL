@@ -3,7 +3,8 @@ import Base from '../../layouts/Base.astro';
 import { programsData, vehicleGroups } from '../../data/programs';
 
 export function getStaticPaths() {
-  return programsData.map((p) => ({
+  // Chỉ sinh trang cho chương trình đã phát hành (published)
+  return programsData.filter((p) => p.published).map((p) => ({
     params: { id: p.id },
     props: { program: p },
   }));
@@ -53,11 +54,11 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   <div class="wrap">
     <div class="highlights-inner">
       <h2 class="highlights-lbl">Điểm nổi bật</h2>
-      <ul class="highlights-list">
+      <ul class="highlights-list" style={`--hl-cols: ${Math.ceil(program.highlights.length / 2)}`}>
         {program.highlights.map(hl => (
           <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>{hl}</span>
+            <img src={`${base}${hl.image}`} alt={hl.name} loading="lazy" />
+            <span>{hl.name}</span>
           </li>
         ))}
       </ul>
@@ -77,31 +78,47 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
       <!-- Tabs Sidebar -->
       <div class="services-tabs" role="tablist">
         <button class="service-tab active" role="tab" aria-selected="true" data-tab="bus">
-          <span class="tab-icon">🚌</span>
+          <img class="tab-img" src={`${base}${program.busInfo.image}`} alt="" loading="lazy" />
           <div class="tab-txt">
             <strong>Xe khách</strong>
             <span>Giường phòng VIP</span>
           </div>
         </button>
         <button class="service-tab" role="tab" aria-selected="false" data-tab="motorbike">
-          <span class="tab-icon">🏍️</span>
+          <img class="tab-img" src={`${base}${program.motorbikeInfo.image}`} alt="" loading="lazy" />
           <div class="tab-txt">
             <strong>Xe máy thuê</strong>
             <span>Đầy bình xăng</span>
           </div>
         </button>
         <button class="service-tab" role="tab" aria-selected="false" data-tab="homestay">
-          <span class="tab-icon">🏡</span>
+          <img class="tab-img" src={`${base}${program.homestayInfo.image}`} alt="" loading="lazy" />
           <div class="tab-txt">
             <strong>Homestay</strong>
             <span>Sen's Homestay</span>
           </div>
         </button>
+        {program.extraStayInfo && (
+          <button class="service-tab" role="tab" aria-selected="false" data-tab="extrastay">
+            <img class="tab-img" src={`${base}${program.extraStayInfo.image}`} alt="" loading="lazy" />
+            <div class="tab-txt">
+              <strong>{program.extraStayInfo.tabLabel}</strong>
+              <span>{program.extraStayInfo.tabSub}</span>
+            </div>
+          </button>
+        )}
         <button class="service-tab" role="tab" aria-selected="false" data-tab="night1">
-          <span class="tab-icon">🌙</span>
+          <img class="tab-img" src={`${base}${program.night1Info.image}`} alt="" loading="lazy" />
           <div class="tab-txt">
-            <strong>Đêm thứ 1</strong>
-            <span>Ngủ xe dưỡng sức</span>
+            <strong>Check-in sớm</strong>
+            <span>Nghỉ sau xe đêm</span>
+          </div>
+        </button>
+        <button class="service-tab" role="tab" aria-selected="false" data-tab="shower">
+          <img class="tab-img" src={`${base}${program.showerInfo.image}`} alt="" loading="lazy" />
+          <div class="tab-txt">
+            <strong>Tắm trước khi về</strong>
+            <span>Sạch sẽ lên xe đêm</span>
           </div>
         </button>
       </div>
@@ -156,6 +173,24 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
           </div>
         </div>
         
+        <!-- Extra Stay Panel (VD: đêm Đồi Cỏ Cháy — chỉ tour có extraStayInfo) -->
+        {program.extraStayInfo && (
+          <div class="service-panel" id="panel-extrastay" role="tabpanel">
+            <div class="panel-content">
+              <div class="panel-info">
+                <h3>{program.extraStayInfo.title}</h3>
+                <p class="panel-desc">{program.extraStayInfo.desc}</p>
+                <ul class="panel-details">
+                  {program.extraStayInfo.details.map(d => <li>{d}</li>)}
+                </ul>
+              </div>
+              <div class="panel-visual">
+                <img src={`${base}${program.extraStayInfo.image}`} alt={program.extraStayInfo.title} />
+              </div>
+            </div>
+          </div>
+        )}
+
         <!-- Night 1 Panel -->
         <div class="service-panel" id="panel-night1" role="tabpanel">
           <div class="panel-content">
@@ -168,6 +203,22 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
             </div>
             <div class="panel-visual">
               <img src={`${base}${program.night1Info.image}`} alt={program.night1Info.title} />
+            </div>
+          </div>
+        </div>
+
+        <!-- Shower Panel (tắm trước khi lên xe rời Cao Bằng) -->
+        <div class="service-panel" id="panel-shower" role="tabpanel">
+          <div class="panel-content">
+            <div class="panel-info">
+              <h3>{program.showerInfo.title}</h3>
+              <p class="panel-desc">{program.showerInfo.desc}</p>
+              <ul class="panel-details">
+                {program.showerInfo.details.map(d => <li>{d}</li>)}
+              </ul>
+            </div>
+            <div class="panel-visual">
+              <img src={`${base}${program.showerInfo.image}`} alt={program.showerInfo.title} />
             </div>
           </div>
         </div>
@@ -201,6 +252,9 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
                 data-index={ci}
               >
                 <span class="vehicle-radio" aria-hidden="true"></span>
+                {choice.image && (
+                  <img class="vehicle-thumb" src={`${base}${choice.image}`} alt="" loading="lazy" />
+                )}
                 <span class="vehicle-choice-body">
                   <span class="vehicle-choice-head">
                     {choice.recommended && <span class="vehicle-badge">✦ Gợi ý</span>}
@@ -214,12 +268,14 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
           </div>
         </div>
       ))}
+      <p class="vehicle-note">Phụ thu được xác nhận lại khi bạn nhắn Zalo — không phát sinh ngoài báo giá.</p>
     </div>
   </div>
 </section>
 
 <!-- ═══════ DETAILED ITINERARY ═══════ -->
 <section class="section-pad itinerary-section bg-surface">
+  <div class="itin-mist" style={`background-image: url(${base}images/sky-texture.jpg)`} aria-hidden="true"></div>
   <div class="wrap">
     <div class="section-header center">
       <h2>Lịch trình thiết kế chi tiết</h2>
@@ -243,7 +299,52 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
           <div class="timeline">
             <div class="timeline-line"></div>
             <div class="timeline-line-fill"></div>
-            <div class="timeline-sun" aria-hidden="true"></div>
+            <div class="timeline-sun" aria-hidden="true">
+              <svg class="sun-icon" viewBox="0 0 32 32">
+                <defs>
+                  <radialGradient id={`sunG${day.dayNumber}`} cx="50%" cy="42%" r="65%">
+                    <stop offset="0%" stop-color="#FFE9A0" />
+                    <stop offset="55%" stop-color="#F6B23F" />
+                    <stop offset="100%" stop-color="#E58223" />
+                  </radialGradient>
+                </defs>
+                <g stroke="#EFA83C" stroke-width="2" stroke-linecap="round">
+                  <line x1="26" y1="16" x2="30.2" y2="16" />
+                  <line x1="24.66" y1="21" x2="26.74" y2="22.2" />
+                  <line x1="21" y1="24.66" x2="22.2" y2="26.74" />
+                  <line x1="16" y1="26" x2="16" y2="30.2" />
+                  <line x1="11" y1="24.66" x2="9.8" y2="26.74" />
+                  <line x1="7.34" y1="21" x2="5.26" y2="22.2" />
+                  <line x1="6" y1="16" x2="1.8" y2="16" />
+                  <line x1="7.34" y1="11" x2="5.26" y2="9.8" />
+                  <line x1="11" y1="7.34" x2="9.8" y2="5.26" />
+                  <line x1="16" y1="6" x2="16" y2="1.8" />
+                  <line x1="21" y1="7.34" x2="22.2" y2="5.26" />
+                  <line x1="24.66" y1="11" x2="26.74" y2="9.8" />
+                </g>
+                <circle cx="16" cy="16" r="7" fill={`url(#sunG${day.dayNumber})`} />
+              </svg>
+              <svg class="moon-icon" viewBox="0 0 32 32">
+                <defs>
+                  <radialGradient id={`moonG${day.dayNumber}`} cx="40%" cy="35%" r="75%">
+                    <stop offset="0%" stop-color="#FBF9EE" />
+                    <stop offset="100%" stop-color="#D8D3EE" />
+                  </radialGradient>
+                  <mask id={`moonM${day.dayNumber}`}>
+                    <rect width="32" height="32" fill="white" />
+                    <circle cx="22.5" cy="10.5" r="8" fill="black" />
+                  </mask>
+                </defs>
+                <g mask={`url(#moonM${day.dayNumber})`}>
+                  <circle cx="15" cy="17" r="9.5" fill={`url(#moonG${day.dayNumber})`} />
+                  <circle cx="11.5" cy="15" r="1.7" fill="#C7C1E3" opacity="0.75" />
+                  <circle cx="15" cy="21.5" r="1.2" fill="#C7C1E3" opacity="0.6" />
+                  <circle cx="9.5" cy="20" r="0.9" fill="#C7C1E3" opacity="0.55" />
+                </g>
+                <path d="M24 4.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" fill="#F3EFFC" />
+                <path d="M28 12l.55 1.4 1.4.55-1.4.55L28 15.9l-.55-1.4-1.4-.55 1.4-.55z" fill="#F3EFFC" opacity="0.8" />
+              </svg>
+            </div>
             {day.activities.map((act, actIdx) => (
               <div class={`timeline-item reveal ${act.type ? `timeline-${act.type}` : ''}`} style={`--i: ${actIdx}`}>
                 <div class="timeline-node"><span class="timeline-dot"></span></div>
@@ -474,27 +575,48 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   color: var(--muted);
   font-weight: 700;
 }
+/* Card ảnh nhỏ, desktop luôn 2 hàng (--hl-cols = ⌈n/2⌉ tính sẵn từ data) */
 .highlights-list {
   list-style: none;
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(var(--hl-cols, 4), 1fr);
+  gap: var(--space-sm);
   flex: 1;
+  min-width: 0;
 }
 .highlights-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.highlights-list li:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
+}
+.highlights-list li img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+.highlights-list li span {
+  display: block;
+  padding: 7px 8px;
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink);
-  background: var(--bg);
-  padding: 8px 16px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
+  text-align: center;
+  line-height: 1.3;
 }
-.highlights-list li svg {
-  color: var(--accent);
+@media (max-width: 700px) {
+  /* Mobile: nhãn lên trên, lưới 2 cột card to full chiều ngang */
+  .highlights-inner { flex-direction: column; align-items: stretch; gap: var(--space-sm); }
+  .highlights-list { grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
+  /* Tổng số lẻ → card cuối trải full ngang, không đứng lẻ nửa hàng */
+  .highlights-list li:last-child:nth-child(odd) { grid-column: span 2; }
+  .highlights-list li:last-child:nth-child(odd) img { aspect-ratio: 21 / 9; }
 }
 
 /* ═══════ SERVICES TABS ═══════ */
@@ -531,8 +653,11 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   background: var(--primary-soft);
   border-color: var(--primary);
 }
-.tab-icon {
-  font-size: 1.8rem;
+.tab-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
   flex-shrink: 0;
 }
 .tab-txt {
@@ -612,6 +737,26 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 .itinerary-section {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  position: relative;
+}
+/* Lớp sương (texture grayscale đều, tile seamless) blend lên gradient bầu
+   trời — tự nhuộm theo màu trời khi cuộn, nằm dưới card */
+.itin-mist {
+  position: absolute;
+  inset: 0;
+  /* Tile lặp kích thước cố định — không kéo giãn theo chiều cao section */
+  background-size: 1000px auto;
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .itin-mist { background-size: 640px auto; }
+}
+.itinerary-section > .wrap {
+  position: relative;
+  z-index: var(--z-base);
 }
 .day-tabs {
   display: flex;
@@ -709,28 +854,46 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   background: linear-gradient(180deg, var(--primary-soft), var(--primary));
   border-radius: 2px;
   z-index: 1;
-  transition: height 0.15s linear;
 }
 .timeline-sun {
   position: absolute;
   left: 12px;
   top: calc(6px + var(--sun, 0) * (100% - 12px));
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 45%, oklch(0.92 0.10 90), oklch(0.75 0.16 65) 65%, oklch(0.66 0.17 55));
-  box-shadow: 0 0 14px 4px oklch(0.80 0.15 70 / 0.45);
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
   z-index: 4;
   pointer-events: none;
-  transition: top 0.15s linear;
+}
+.timeline-sun svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+}
+.sun-icon {
+  filter: drop-shadow(0 0 5px oklch(0.80 0.15 70 / 0.55));
+}
+/* Cuối ngày (p > 0.7, trời chuyển tím) mặt trời lặn → trăng lưỡi liềm mọc */
+.moon-icon {
+  filter: drop-shadow(0 0 5px oklch(0.72 0.06 295 / 0.6));
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+.timeline-sun.night .sun-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+.timeline-sun.night .moon-icon {
+  opacity: 1;
+  transform: none;
 }
 @media (min-width: 900px) {
   .timeline-line-fill { left: 50%; margin-left: -1px; }
   .timeline-sun { left: 50%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .timeline-line-fill, .timeline-sun { transition: none; }
   .timeline-sun { display: none; }
 }
 .timeline-content {
@@ -967,7 +1130,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-  max-width: 720px;
+  max-width: 960px;
 }
 .vehicle-group-head {
   display: flex;
@@ -978,19 +1141,21 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 }
 .vehicle-group-head h3 { font-size: var(--text-lg); }
 .vehicle-group-note { font-size: var(--text-sm); color: var(--muted); }
+/* Card ảnh chủ đạo: ảnh full-width trên, radio nổi trên ảnh, text gọn dưới */
 .vehicle-choices {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
 .vehicle-choice {
   display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
   width: 100%;
   text-align: left;
-  padding: 14px;
+  padding: 0;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--bg);
@@ -1004,29 +1169,38 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   box-shadow: 0 0 0 1px var(--primary);
 }
 .vehicle-radio {
-  width: 20px;
-  height: 20px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: var(--z-base);
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--line-strong);
+  border: 2px solid oklch(1 0 0 / 0.9);
+  background: rgba(20, 15, 10, 0.35);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   flex-shrink: 0;
-  margin-top: 2px;
-  position: relative;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s;
 }
-.vehicle-choice.selected .vehicle-radio { border-color: var(--primary); }
+.vehicle-choice.selected .vehicle-radio {
+  border-color: #fff;
+  background: var(--primary);
+}
 .vehicle-choice.selected .vehicle-radio::after {
   content: '';
   position: absolute;
-  inset: 3px;
+  inset: 4px;
   border-radius: 50%;
-  background: var(--primary);
+  background: #fff;
 }
 .vehicle-choice-body {
   display: flex;
   flex-direction: column;
   gap: 3px;
   flex: 1;
-  min-width: 60%;
+  min-width: 0;
+  padding: 10px 12px 2px;
 }
 .vehicle-choice-head {
   display: flex;
@@ -1054,17 +1228,29 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   line-height: 1.5;
 }
 .vehicle-surcharge {
-  margin-left: auto;
-  margin-top: 2px;
+  padding: 4px 12px 12px;
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--primary);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 .vehicle-surcharge.included {
   color: var(--muted);
   font-weight: 600;
+}
+/* Ảnh là nhân vật chính — full-width, chiếm phần lớn card */
+.vehicle-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  flex-shrink: 0;
+  order: -1; /* ảnh luôn lên đầu, trước radio trong DOM */
+}
+.vehicle-note {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 /* ═══════ FOOTER CTA ═══════ */
@@ -1139,14 +1325,13 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     grid-template-columns: 1fr;
     gap: var(--space-lg);
   }
+  /* Mobile: lưới thấy đủ 4 tab cùng lúc — không bắt khách vuốt ngang */
   .services-tabs {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
   }
   .service-tab {
-    flex: 0 0 160px;
     padding: var(--space-sm);
     flex-direction: column;
     text-align: center;
@@ -1155,8 +1340,12 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   .service-tab:hover {
     transform: none;
   }
-  .tab-icon {
-    font-size: 1.4rem;
+  /* Mobile: ảnh thumb trải full ngang tab như mini-card */
+  .tab-img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
   }
   .tab-txt strong {
     font-size: var(--text-sm);
@@ -1171,12 +1360,42 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 }
 
 @media (max-width: 600px) {
+  /* Sticky booking bar dưới đã lo CTA — ẩn nút Zalo trên nav để khỏi lặp
+     và nhường chỗ cho tên tour hiển thị đủ */
+  #detailNav .nav-cta { display: none; }
+  #detailNav .nav-title {
+    flex: 1;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .detail-hero {
     min-height: 380px;
   }
   .detail-hero h1 {
     font-size: var(--text-2xl);
   }
+
+  /* ── Dịch vụ: gọn cho mobile — ảnh thấp, 2 ý chính, bớt chữ ── */
+  .panel-content { min-height: 0; }
+  .panel-visual { height: 180px; }
+  .panel-info { padding: var(--space-md); }
+  .panel-desc {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-sm);
+  }
+  .panel-details li { font-size: var(--text-xs); margin-bottom: 6px; }
+  .panel-details li:nth-child(n+3) { display: none; }
+
+  /* ── Vehicle: lưới 2 cột card ảnh, ẩn mô tả — ảnh nói thay chữ ── */
+  .vehicle-choices { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .vehicle-choice-desc { display: none; }
+  .vehicle-choice-name { font-size: var(--text-sm); }
+  /* Nhóm số lẻ lựa chọn → card cuối trải full ngang */
+  .vehicle-choice:last-child:nth-child(odd) { grid-column: span 2; }
+  .vehicle-choice:last-child:nth-child(odd) .vehicle-thumb { aspect-ratio: 21 / 9; }
 }
 </style>
 
@@ -1261,11 +1480,18 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   // Sáng cerulean dịu → trưa kem nắng → chiều đào golden-hour → tối tím periwinkle.
   const SKY = [196, 219, 236], NOON = [244, 235, 203], GOLD = [241, 204, 166], DUSK = [206, 197, 226];
   const lerp = (a, b, t) => Math.round(a + (b - a) * t);
-  const mixRGB = (c1, c2, t) => `rgb(${lerp(c1[0], c2[0], t)}, ${lerp(c1[1], c2[1], t)}, ${lerp(c1[2], c2[2], t)})`;
-  const dayColor = (p) => {
-    if (p < 1 / 3) return mixRGB(SKY, NOON, p / (1 / 3));
-    if (p < 2 / 3) return mixRGB(NOON, GOLD, (p - 1 / 3) / (1 / 3));
-    return mixRGB(GOLD, DUSK, (p - 2 / 3) / (1 / 3));
+  const mix = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+  const dayColorArr = (p) => {
+    if (p < 1 / 3) return mix(SKY, NOON, p / (1 / 3));
+    if (p < 2 / 3) return mix(NOON, GOLD, (p - 1 / 3) / (1 / 3));
+    return mix(GOLD, DUSK, (p - 2 / 3) / (1 / 3));
+  };
+  // "Bầu trời": gradient dọc — trên sáng nhạt (trời cao, pha sương trắng),
+  // dưới đậm dần (chân trời). Lấy cảm hứng từ dải sương tan trong ảnh generate.
+  const skyGradient = (p) => {
+    const horizon = dayColorArr(p);
+    const zenith = mix(horizon, [255, 255, 255], 0.55);
+    return `linear-gradient(180deg, rgb(${zenith}) 0%, rgb(${horizon}) 100%)`;
   };
 
   let tlTicking = false;
@@ -1273,10 +1499,12 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     tlTicking = false;
     const tl = document.querySelector('.daily-timeline.active .timeline');
     if (!tl) return;
+    const sunEl = tl.querySelector('.timeline-sun');
     if (prefersReduced.matches) {
       tl.style.setProperty('--sun', '0');
       tl.querySelectorAll('.timeline-item').forEach(it => it.classList.remove('upcoming'));
-      if (itinSection) itinSection.style.background = dayColor(0.2);
+      sunEl?.classList.remove('night');
+      if (itinSection) itinSection.style.background = skyGradient(0.2);
       return;
     }
     const rect = tl.getBoundingClientRect();
@@ -1284,7 +1512,9 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     let p = (ref - rect.top) / rect.height;
     p = Math.max(0, Math.min(1, p));
     tl.style.setProperty('--sun', p.toFixed(4));
-    if (itinSection) itinSection.style.background = dayColor(p);
+    // Qua 70% ngày (trời vào pha tím hoàng hôn) → trăng thay mặt trời
+    sunEl?.classList.toggle('night', p > 0.7);
+    if (itinSection) itinSection.style.background = skyGradient(p);
     const sunY = p * rect.height;
     tl.querySelectorAll('.timeline-item').forEach(it => {
       it.classList.toggle('upcoming', it.offsetTop > sunY + 4);
