@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { programsData } from '../data/programs';
 
 const ZALO_LINK = 'https://zalo.me/0822946888';
 
@@ -10,47 +11,23 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 // đã sống sẵn ở <web chính>/map/ — đường dẫn này giữ nguyên vẫn đúng.
 const MAP_URL = `${base}map/index.html`;
 
-// published: false → chưa phát hành, ẩn khỏi web (bật lại khi có nội dung thật)
-const allPrograms = [
-  {
-    id: '2n1d',
-    name: '2 Ngày 1 Đêm',
-    tagline: 'Khám phá Cao Bằng hot nhất — tiết kiệm, chủ động',
-    price: '2.150.000đ',
-    priceNote: '/2 khách',
-    highlights: ['Thác Bản Giốc', 'Động Ngườm Ngao', 'Làng đá Khuổi Ky', 'Núi Mắt Thần', 'Hồ Thang Hen', 'Pác Bó'],
-    days: 2,
-    spots: 6,
-    published: true,
-    image: 'images/places/ban-gioc.jpg',
-  },
-  {
-    id: '3n2d',
-    name: '3 Ngày 2 Đêm',
-    tagline: 'Được yêu thích nhất — Đồi Cỏ Cháy, Bản Giốc, Thang Hen, Pác Bó',
-    price: '2.850.000đ',
-    priceNote: '/2 khách',
-    highlights: ['Núi Mắt Thần', 'Đồi Cỏ Cháy', 'Thác Bản Giốc', 'Động Ngườm Ngao', 'Pỉ Pha Viewpoint', 'Hồ Thang Hen', 'Pác Bó'],
-    days: 3,
-    spots: 10,
-    featured: true,
-    published: true,
-    image: 'images/places/eye-mountain.jpg',
-  },
-  {
-    id: '4n3d',
-    name: '4 Ngày 3 Đêm',
-    tagline: 'Khám phá sâu — đi chậm, thấy nhiều',
-    price: 'Liên hệ',
-    priceNote: 'giá tuỳ chỉnh theo nhóm',
-    highlights: ['Tất cả điểm 3N2Đ', 'Pác Bó', 'Phja Oắc', 'Cốc Bó suối Lê-nin', 'Đèo Mã Phục', 'Cafe núi'],
-    days: 4,
-    spots: 14,
-    published: false,
-    image: 'images/places/khau-coc-cha.jpg',
-  },
-];
-const programs = allPrograms.filter(p => p.published);
+// Combo lấy TỪ nguồn chuẩn programs.ts (đồng bộ với trang chi tiết).
+// Card trang chủ chỉ cần vài field + tên highlight (map từ {name,image} → name).
+// published: false → chưa phát hành, ẩn khỏi web.
+const programs = programsData
+  .filter(p => p.published)
+  .map(p => ({
+    id: p.id,
+    name: p.name,
+    tagline: p.tagline,
+    price: p.price,
+    priceNote: p.priceNote,
+    highlights: p.highlights.map(h => h.name),
+    days: p.days,
+    spots: p.spots,
+    featured: p.featured,
+    image: `${base}${p.image}`,
+  }));
 
 
 
@@ -217,37 +194,6 @@ const gallery = [
   </div>
 </section>
 
-<!-- ═══════ TRAVEL MAP ═══════ -->
-<section id="map" class="section-pad">
-  <div class="wrap">
-    <a href={MAP_URL} class="map-panel reveal" aria-label="Mở bản đồ Cao Bằng tương tác">
-      <img src={`${base}images/map_hero.jpg`} alt="Bản đồ Cao Bằng ghim tay các điểm: Bản Giốc, Ngườm Ngao, Núi Mắt Thần, Ba Quang" loading="lazy" />
-      <div class="map-scrim"></div>
-      <span class="map-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
-        Bản đồ
-      </span>
-      <div class="map-overlay">
-        <span class="map-flag">Tương tác · Người bản địa vẽ tay</span>
-        <h2>Bản đồ Cao Bằng<br/>của riêng Sen</h2>
-        <p>45 điểm được Sen ghim tay — từng con thác, hang động, quán cà phê và cung đường thật sự đáng đi. Kèm 3 lộ trình vẽ sẵn với khoảng cách &amp; thời gian chạy thực tế.</p>
-        <div class="map-foot">
-          <div class="map-tags">
-            <span class="map-pin">Thác Bản Giốc</span>
-            <span class="map-pin">Núi Mắt Thần</span>
-            <span class="map-pin">Ngườm Ngao</span>
-            <span class="map-pin">Ba Quang</span>
-          </div>
-          <span class="map-open btn btn-primary">
-            Mở bản đồ
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </span>
-        </div>
-      </div>
-    </a>
-  </div>
-</section>
-
 <!-- ═══════ PROGRAMS ═══════ -->
 <section id="programs" class="section-pad bg-surface">
   <div class="wrap">
@@ -296,6 +242,37 @@ const gallery = [
         </a>
       ))}
     </div>
+  </div>
+</section>
+
+<!-- ═══════ TRAVEL MAP ═══════ -->
+<section id="map" class="section-pad">
+  <div class="wrap">
+    <a href={MAP_URL} class="map-panel reveal" aria-label="Mở bản đồ Cao Bằng tương tác">
+      <img src={`${base}images/map_hero.jpg`} alt="Bản đồ Cao Bằng ghim tay các điểm: Bản Giốc, Ngườm Ngao, Núi Mắt Thần, Ba Quang" loading="lazy" />
+      <div class="map-scrim"></div>
+      <span class="map-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        Bản đồ
+      </span>
+      <div class="map-overlay">
+        <span class="map-flag">Tương tác · Người bản địa vẽ tay</span>
+        <h2>Bản đồ Cao Bằng<br/>của riêng Sen</h2>
+        <p>45 điểm được Sen ghim tay — từng con thác, hang động, quán cà phê và cung đường thật sự đáng đi. Kèm 3 lộ trình vẽ sẵn với khoảng cách &amp; thời gian chạy thực tế.</p>
+        <div class="map-foot">
+          <div class="map-tags">
+            <span class="map-pin">Thác Bản Giốc</span>
+            <span class="map-pin">Núi Mắt Thần</span>
+            <span class="map-pin">Ngườm Ngao</span>
+            <span class="map-pin">Ba Quang</span>
+          </div>
+          <span class="map-open btn btn-primary">
+            Mở bản đồ
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 

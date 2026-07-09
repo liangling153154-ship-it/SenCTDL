@@ -33,6 +33,106 @@ qua chat.
 
 # TICKETS
 
+## QUY TRÌNH · Cập nhật bản đồ mới vào public/map/ (giữ patch embed)
+Nguồn map thật: `3. MAIN WEBSITE/SEN WEB OTA - main/CAO BANG SUPER MAP`.
+`public/map/` là bản copy tạm (gitignored). Khi có bản map mới, làm đúng thứ tự:
+1. Copy runtime files đè lên `public/map/`: `app.js index.html data.js boundary.js
+   highways.js trips.js sw.js README.md INTEGRATION.md` + sync `assets/`.
+   KHÔNG copy: `admin/ .git .claude .impeccable *.bat make-thumbs.ps1 AI_REPORT.md`.
+2. Diff cấu trúc `app.js`: kiểm mốc `function activateTrip`, `segsByDay.forEach`,
+   `stopsByDay.forEach`, `day-chip`, `var welcome`, đuôi `buildChips()/refresh()`.
+   Nếu cấu trúc y cũ (thường vậy) → vá lại 3 patch embed như dưới.
+3. Vá 3 patch embed (nội dung chuẩn xem TICKET-013):
+   - `app.js` đầu: `QS`, `EMBED_MODE` (`?embed`→`body.embed`).
+   - `app.js` `activateTrip(trip, dayIdx)`: 3 chỗ `if (dayIdx !== null && di !== dayIdx) return`
+     (segs, stops) + chip `.active` + guard đầu hàm + set `activeTripDay` + build `trip._daySet`.
+   - `app.js` `var activeTripDay = null` (cạnh activeTrip) + reset trong `exitTrip()`.
+   - `app.js` `refresh()`: khi lọc 1 ngày dùng `activeTrip._daySet[activeTripDay]`
+     thay `activeTrip._set` — CHỈ hiện POI của ngày đó (tránh pin ngày khác đè lên,
+     VD Đồi Cỏ Cháy ngày 3 đè Thàng Khám ngày 2 vì chỉ cách nhau 2km).
+   - `app.js` cuối: deep-link `?trip=&day=` + listener `message` (cbmap-trip/day).
+   - `index.html` sau `.day-chip svg{}`: `.day-chip.active` + `body.embed .topbar/.trip-bar`.
+4. Kiểm POI Sen dùng còn tồn tại: `node -e` load data.js, check 15 id trong
+   make-sen-trips.mjs. Rồi chạy `node sessions/snippets/make-sen-trips.mjs` để
+   regenerate 4 trip vào trips.js mới (tự động).
+5. `npx astro build` + Playwright (shot-options.js): switcher lộ trình, đổi ngày,
+   deep-link, mobile 375px.
+Lần cập nhật gần nhất: 2026-07-09 (data.js 30KB→58KB, 46→102 POI, thêm zoomBadge;
+patch áp lại sạch, không lỗi).
+
+## TICKET-014 · Verify lịch trình MỚI theo "4 LỊCH TRÌNH.md" + switcher 2 lộ trình/combo
+- **From:** Claude
+- **To:** Antigravity
+- **Status:** OPEN
+- **Nội dung:** Toàn bộ timeline 2N1Đ & 3N2Đ viết lại theo
+  `USER-GUI-AI/4 LỊCH TRÌNH.md` (giọng Sen). Mỗi combo giờ có **2 lộ trình**
+  khách tự chọn — switcher xanh forest phía trên bản đồ:
+  - 2N1Đ · LT1 (đêm ở Sen's): N1 Bản Giốc→Ngườm Ngao→Ngườm Bàng→Đồi Cỏ Cháy;
+    N2 Pác Bó→Bản Giàng→Thang Hen→Mắt Thần.
+  - 2N1Đ · LT2 (đêm làng đá): N1 Pỉ Pha→Chùa Phật Tích→Bản Giốc→Khuổi Ky
+    (ngủ)→Ngườm Ngao; N2 Ngườm Bàng→Đồi Cỏ Cháy→Mắt Thần→Thang Hen.
+  - 3N2Đ · LT1 (đêm Yến Nhi làng đá): N1 Pác Bó→Lũng Luông→Bản Giàng→Thang
+    Hen→Mắt Thần; N2 Làng giấy→Đồi Cỏ Cháy→Yến Nhi→Ngườm Ngao→Quây Sơn→Cầu
+    Pác Sắc Ngà; N3 Chùa Phật Tích→Bản Giốc→Pỉ Pha.
+  - 3N2Đ · LT2 (đêm Thàng Khám): N1 như LT1; N2 Chùa Phật Tích→Bản Giốc→
+    Ngườm Ngao→Thàng Khám; N3 Đồi Cỏ Cháy→Nùng Indigo Workshop.
+- **Data:** `programs.ts` — interface `ItineraryOption` (key/label/sub/
+  mapTripId/mapTripDayMap/itinerary), `itineraryOptions` thay `itinerary`;
+  mốc dùng chung tách thành ACT_* constants. Card extraStay 3N2Đ đổi
+  '`Đêm Đồi Cỏ Cháy`' → '`Đêm làng đá`' (Yến Nhi/Thàng Khám). spots 8/12.
+- **Map:** 4 trip mới `sen-2n1d-a/b`, `sen-3n2d-a/b` (OSRM, generator
+  `sessions/snippets/make-sen-trips.mjs`; hỗ trợ mỏ neo A(x) = nơi ngủ đêm
+  trước, vẽ đường nhưng không đánh số). `app.js` thêm postMessage
+  `cbmap-trip` (đổi trip không reload iframe). Đổi lộ trình/ngày → map bay theo.
+- **Chưa có trên map (thiếu toạ độ):** Hang Ngườm Bàng, suối Thàng Khám,
+  Mế Farmstay — vẫn nằm trong timeline, khi nào có toạ độ thì thêm POI.
+- **Cần verify:** switcher đổi lộ trình mượt (timeline + map + link toàn màn
+  hình đổi theo); day-tab chỉ tác động lộ trình đang mở; 375px không tràn;
+  mặt trời/timeline vẫn chạy đúng sau khi đổi lộ trình; console sạch.
+- **Ảnh Claude đã chụp:** `sessions/screenshots/opt-*.png` (đã pass).
+
+## TICKET-013 · Verify bản đồ hành trình NHÚNG (SUPER MAP iframe) trong "Lịch trình theo giờ"
+- **From:** Claude
+- **To:** Antigravity
+- **Status:** OPEN
+- **Nội dung:** CAO BANG SUPER MAP nhúng iframe giữa day-tabs và timeline ở
+  `/programs/2n1d/` `/programs/3n2d/`, deep-link `?trip=<id>&embed[&day=n]`.
+  Route THẬT theo OSRM, pin đánh số, ảnh từng điểm. Màn chắn "Chạm để khám phá
+  bản đồ" chống nuốt cuộn trang — chạm 1 lần mới tương tác. Dưới map có nút
+  "Mở toàn màn hình". (Bản SVG tĩnh trước đó đã gỡ — backup đầy đủ ở
+  `sessions/snippets/route-map-svg-backup.md` nếu cần khôi phục.)
+- **Trip RIÊNG theo combo (không dùng trip gợi ý sẵn của map):** 2 trip
+  `sen-2n1d`, `sen-3n2d` — ngày nào điểm đó đúng theo itinerary trong
+  `programs.ts` (N1: Bản Giốc→Ngườm Ngao→Khuổi Ky; N2: Thang Hen→Mắt Thần;
+  N3: Pác Bó), geometry đường thật OSRM tính trước bằng
+  `sessions/snippets/make-sen-trips.mjs` (chạy lại khi itinerary đổi).
+  Block sinh ra nằm cuối `public/map/trips.js` (đánh dấu SEN-TRIPS BEGIN/END)
+  + bản commit `sessions/snippets/sen-trips.generated.js`. Không nằm trong
+  SUGGESTED_TRIP_IDS — chỉ mở qua deep-link từ trang tour.
+- **Đồng bộ ngày:** `mapTripDayMap` trong `programs.ts`: 2N1Đ=[1,2],
+  3N2Đ=[1,2,3] → đổi day-tab là map lọc + bay đúng cung ngày đó (postMessage
+  `{type:'cbmap-day', day}`), pin đánh số lại 1..n trong ngày.
+- **⚠️ PATCH trong public/map/ (bản copy GITIGNORED — KHI GHÉP VÀO WEB CHÍNH
+  PHẢI PORT các patch này sang map thật):**
+  - `app.js` đầu file: `QS`, `EMBED_MODE` (`?embed` → `body.embed`).
+  - `app.js` `activateTrip(trip, dayIdx)`: tham số 2 (0-based) lọc segs+stops
+    theo 1 ngày, đánh số lại 1..n, chip `.day-chip.active`.
+  - `app.js` cuối file: deep-link `?trip=&day=` + listener `message`
+    (`cbmap-day`, check `e.origin === location.origin`).
+  - `index.html` CSS: `.day-chip.active` (ring) + `body.embed .topbar{display:none}`
+    + `body.embed .trip-bar{display:none}` (embed = bản đồ trần, không trip bar).
+  - `trips.js` cuối file: block SEN-TRIPS (copy nguyên từ
+    `sessions/snippets/sen-trips.generated.js`).
+- **File web nhánh:** `src/data/programs.ts` (`mapTripId`, `mapTripDayMap`),
+  `src/pages/programs/[id].astro` (iframe + scrim + postMessage trong Day
+  Timeline Switcher). `mapStops`/`caobang-boundary.ts` giữ lại cho bản SVG dự phòng.
+- **⚠️ Production:** GitHub Pages hiện KHÔNG có `/map/` (gitignored) → khung
+  bản đồ 404 trên web deploy cho tới khi ghép vào web chính. Chỉ test local.
+- **Cần verify:** 375px không tràn ngang; scrim chặn cuộn tốt, chạm 1 lần
+  tương tác được; 2N1Đ đổi tab → map bay sang đúng ngày; 3N2Đ luôn đủ 3 màu;
+  console sạch.
+- **Ảnh Claude đã chụp:** `sessions/screenshots/embed-*.png` (đã pass).
+
 ## TICKET-012 · Verify tối ưu mobile: Dịch vụ gọn + Vehicle thumbnail to (Editor cmds)
 - **From:** Claude
 - **To:** Antigravity

@@ -20,11 +20,54 @@ export interface Activity {
   tip?: string;            // lưu ý / phương án mưa cho điểm chính
 }
 
+// Điểm lớn trong ngày hiện trên bản đồ hành trình (đánh số 1-2-3 theo thứ tự đi).
+// Toạ độ lấy từ CAO BANG SUPER MAP (public/map/data.js) — nguồn chuẩn.
+export interface MapStop {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
 export interface DayItinerary {
   dayNumber: number;
   dayTitle: string;
+  mapStops?: MapStop[];  // chỉ các điểm lớn — không tính mốc ăn/nhận xe
   activities: Activity[];
 }
+
+// Một lộ trình trọn vẹn của combo (mỗi combo có thể có 2 lộ trình cho khách chọn).
+// Nguồn nội dung: USER-GUI-AI/4 LỊCH TRÌNH.md (cập nhật 2026-07-09).
+export interface ItineraryOption {
+  key: string;             // 'a' | 'b' — dùng làm id DOM + phân biệt trong JS
+  label: string;           // tên ngắn trên switcher, VD "Lộ trình 1 — đêm ở Sen's"
+  sub: string;             // dòng phụ tóm khác biệt
+  mapTripId?: string;      // trip tương ứng trong CAO BANG SUPER MAP (trips.js)
+  mapTripDayMap?: number[]; // ngày lộ trình ↔ Day trip (1-based)
+  itinerary: DayItinerary[];
+}
+
+// Điểm xuất phát & kết thúc mỗi ngày — Sen's Homestay (TP. Cao Bằng)
+export const HOMESTAY_LOCATION = { name: "Sen's Homestay", lat: 22.67379, lng: 106.25561 };
+
+// Toạ độ các điểm lớn dùng chung giữa các combo (từ public/map/data.js)
+const MAP_PLACES = {
+  banGioc:    { name: 'Thác Bản Giốc',       lat: 22.85436, lng: 106.72427 },
+  nguomNgao:  { name: 'Động Ngườm Ngao',     lat: 22.84542, lng: 106.70585 },
+  khuoiKy:    { name: 'Làng đá Khuổi Ky',    lat: 22.85485, lng: 106.70091 },
+  matThan:    { name: 'Núi Mắt Thần',        lat: 22.77421, lng: 106.31766 },
+  thangHen:   { name: 'Hồ Thang Hen',        lat: 22.759,   lng: 106.2972  },
+  pacBo:      { name: 'Khu di tích Pác Bó',  lat: 22.98708, lng: 106.0504  },
+  doiCoChay:  { name: 'Đồi Cỏ Cháy',         lat: 22.67261, lng: 106.6175  },
+  piPha:      { name: 'Pỉ Pha Viewpoint',    lat: 22.884,   lng: 106.583   },
+  phatTich:   { name: 'Chùa Phật Tích Trúc Lâm', lat: 22.85085, lng: 106.72313 },
+  banGiang:   { name: 'Thác Bản Giàng',      lat: 22.91214, lng: 106.05841 },
+  lungLuong:  { name: 'Lũng Luông',          lat: 22.92765, lng: 106.06731 },
+  quaySon:    { name: 'Sông Quây Sơn',       lat: 22.856,   lng: 106.708   },
+  pacNga:     { name: 'Cầu Pác Sắc Ngà',     lat: 22.899,   lng: 106.562   },
+  langGiay:   { name: 'Làng giấy Dìa Trên',  lat: 22.714,   lng: 106.41    },
+  nungIndigo: { name: 'Nùng Indigo Workshop', lat: 22.6894384, lng: 106.3871184 },
+  thangKham:  { name: 'Thàng Khám',          lat: 22.6771433, lng: 106.5971808 },
+};
 
 export interface ProgramDetails {
   id: string;
@@ -39,7 +82,7 @@ export interface ProgramDetails {
   image: string;
   // Điểm nổi bật: card ảnh nhỏ xếp 2 hàng ở trang chi tiết
   highlights: { name: string; image: string }[];
-  
+
   // Detailed components shown on card click
   busInfo: {
     title: string;
@@ -72,7 +115,7 @@ export interface ProgramDetails {
     details: string[];
     image: string;
   };
-  // Card nghỉ đặc biệt riêng của tour (VD: đêm Đồi Cỏ Cháy ở 3N2Đ) —
+  // Card nghỉ đặc biệt riêng của tour (VD: đêm làng đá ở 3N2Đ) —
   // tour nào có field này mới hiện thêm tab thứ 5 trong "Dịch vụ trọn gói".
   extraStayInfo?: {
     tabLabel: string;  // tên tab
@@ -83,7 +126,8 @@ export interface ProgramDetails {
     image: string;
   };
 
-  itinerary: DayItinerary[];
+  // Các lộ trình cho khách chọn (1 hoặc 2). Lộ trình đầu là mặc định.
+  itineraryOptions: ItineraryOption[];
 }
 
 export interface VehicleChoice {
@@ -125,6 +169,172 @@ export const vehicleGroups: VehicleGroup[] = [
   },
 ];
 
+// ═══════════════ Các mốc dùng lại giữa nhiều lộ trình ═══════════════
+
+const ACT_ARRIVE: Activity = {
+  time: '04:30',
+  title: 'Đến Cao Bằng',
+  desc: 'Xe đêm tới nơi, đưa bạn thẳng về Sen\'s Homestay — ngủ bù, tắm nóng rồi hãy tính tiếp.',
+};
+
+const ACT_BREAKFAST_CITY: Activity = {
+  time: '06:30',
+  title: 'Ăn sáng',
+  desc: 'Hai quán ruột gần điểm nhận xe — chọn theo khẩu vị.',
+  type: 'food',
+  options: [
+    { name: 'Phở vịt quay quán Lâm', price: '~40.000đ', meta: 'Gần bến xe · mở từ 6h', reason: 'Vịt quay da giòn, nước dùng đậm — món trứ danh Cao Bằng.', recommended: true, image: 'images/Food/breakfast.jpg' },
+    { name: 'Bánh cuốn canh', price: '~30.000đ', meta: 'Gần chợ · phục vụ nhanh', reason: 'Nhẹ bụng, ăn nhanh để xuất phát sớm.', image: 'images/Food/banh-cuon/1.jpg' },
+  ],
+};
+
+const ACT_GET_BIKE: Activity = {
+  time: '07:15',
+  title: 'Nhận xe máy đầy xăng',
+  desc: 'Honda Wave Alpha đã kiểm tra lốp, phanh — kèm mũ 2/3, giá đỡ điện thoại và áo mưa.',
+  image: 'images/bikes/wave-alpha.jpg',
+};
+
+const ACT_BAN_GIOC = (time: string): Activity => ({
+  time,
+  title: 'Khám phá Thác Bản Giốc',
+  desc: 'Thác nước biên giới lớn nhất Đông Nam Á — điểm nhất định phải đến của Cao Bằng.',
+  type: 'sight',
+  image: 'images/places/ban-gioc.jpg',
+  chips: ['Đẹp nhất: 8–10h sáng', 'Thời lượng: ~2 giờ', 'Góc chụp: bè tre trên sông', 'Có bãi gửi xe'],
+  tip: 'Mưa lớn: đảo lịch — vào Động Ngườm Ngao trước, quay lại thác buổi chiều.',
+});
+
+const ACT_NGUOM_NGAO = (time: string): Activity => ({
+  time,
+  title: 'Khám phá Động Ngườm Ngao',
+  desc: 'Một trong những hang động đẹp nhất miền Bắc — nhũ đá triệu năm tuổi.',
+  type: 'sight',
+  image: 'images/places/nguom-ngao.jpg',
+  chips: ['Tuyến ngắn: ~45 phút', 'Tuyến dài: ~2 giờ', 'Trong động ~18–22°C', 'Góc chụp: Cây San Hô, Thác Bạc'],
+  tip: 'Nền đá có thể trơn — đi giày thể thao.',
+});
+
+const ACT_THANG_HEN = (time: string, best: string, dur: string): Activity => ({
+  time,
+  title: 'Khám phá Hồ Thang Hen',
+  desc: 'Hồ nước xanh ngọc giữa núi đá vôi — đi dạo cầu gỗ, bến thuyền là có ảnh đẹp.',
+  type: 'sight',
+  image: 'images/places/thang-hen.jpg',
+  chips: [`Vé: 30.000đ/người`, `Đẹp nhất: ${best}`, `Thời lượng: ${dur}`, 'Có SUP & thuyền (tuỳ thời điểm)'],
+});
+
+const ACT_MAT_THAN = (time: string, best: string): Activity => ({
+  time,
+  title: 'Khám phá Núi Mắt Thần',
+  desc: 'Biểu tượng của Công viên địa chất Non nước Cao Bằng — núi thủng giữa đồng cỏ và hồ nước.',
+  type: 'sight',
+  image: 'images/places/eye-mountain.jpg',
+  chips: [`Đẹp nhất: ${best}`, 'Thời lượng: ~1,5–2 giờ', 'Bè mùa mưa: 50k–100k/người', 'Khô ráo: đi bộ quanh hồ'],
+});
+
+const ACT_PAC_BO = (time: string): Activity => ({
+  time,
+  title: 'Khu di tích Quốc gia đặc biệt Pác Bó',
+  desc: 'Suối Lê Nin xanh vắt, núi Các Mác, hang Cốc Bó và cột mốc Km0 — đi một vòng là hiểu vì sao ai cũng ghé.',
+  type: 'sight',
+  image: 'images/places/pac-bo.jpg',
+  chips: ['Miễn phí vé vào cổng', 'Thời lượng: ~2 giờ', 'Đẹp nhất: sáng có nắng', 'Có xe điện trong khu'],
+});
+
+const ACT_BAN_GIANG: Activity = {
+  time: '11:00',
+  title: 'Check-in Thác Bản Giàng',
+  desc: 'Thác nhỏ ngay trên cung đường về — nước xanh trong, mùa hè ngâm chân, tắm suối được luôn.',
+  type: 'sight',
+  chips: ['Đẹp nhất: 10–14h', 'Thời lượng: ~45 phút', 'Có bãi gửi xe'],
+  tip: 'Đường vào dễ đi — dừng nghỉ chân trước bữa trưa là vừa.',
+};
+
+const ACT_LUNCH_HA_QUANG: Activity = {
+  time: '12:00',
+  title: 'Ăn trưa khu Hà Quảng',
+  desc: 'Nghỉ và nạp năng lượng trước chặng chiều.',
+  type: 'food',
+  options: [
+    { name: 'Mế Farm Stay', price: '~100.000–180.000đ/người', meta: 'Thuận đường · không gian đẹp', reason: 'Món địa phương giữa khung cảnh farm — nghỉ giữa hành trình rất đã.', recommended: true },
+    { name: 'Quán cơm thị trấn Hà Quảng', reason: 'Nhanh, giá hợp lý, tiện trên đường đi.' },
+  ],
+};
+
+const ACT_DOI_CO_CHAY = (time: string, best: string, dur: string, sunset = false): Activity => ({
+  time,
+  title: sunset ? 'Ngắm hoàng hôn tại Đồi Cỏ Cháy' : 'Check-in Đồi Cỏ Cháy',
+  desc: sunset
+    ? 'Leo 15–20 phút là đứng trên đồi cỏ tầm nhìn 360° — cuối chiều trời chuyển màu đẹp nhất.'
+    : 'Leo 15–20 phút để ôm trọn thung lũng Vinh Quý từ trên cao.',
+  type: 'sight',
+  image: 'images/places/ba-quang.jpg',
+  chips: [`Đẹp nhất: ${best}`, 'Leo đồi: 15–20 phút', `Thời lượng: ${dur}`],
+  tip: 'Mang nước, đội mũ, đi giày thể thao. Mưa lớn đường trơn — đừng lên đồi.',
+});
+
+const ACT_PHAT_TICH = (time: string, dur: string): Activity => ({
+  time,
+  title: 'Chùa Phật Tích Trúc Lâm Bản Giốc',
+  desc: 'Ngôi chùa đầu tiên nơi biên giới phía Bắc — đứng sân chùa nhìn xuống trọn Thác Bản Giốc.',
+  type: 'sight',
+  image: 'images/places/phat-tich.jpg',
+  chips: [`Thời lượng: ${dur}`, 'Góc chụp: sân chùa nhìn xuống thác'],
+  tip: 'Ăn mặc lịch sự, giữ yên tĩnh khi tham quan.',
+});
+
+const ACT_PI_PHA = (time: string, chips: string[]): Activity => ({
+  time,
+  title: 'Check-in Pỉ Pha Viewpoint',
+  desc: 'Điểm ngắm cảnh mới của Trùng Khánh — ban công, xích đu hướng thẳng ra thung lũng núi đá vôi.',
+  type: 'sight',
+  image: 'images/places/pi-pha-viewpoint.jpg',
+  chips,
+});
+
+const ACT_NGUOM_BANG = (time: string, chips: string[]): Activity => ({
+  time,
+  title: 'Check-in Hang Ngườm Bàng',
+  desc: 'Hang đá cửa rộng ngay trên cung đường — ghé chụp vài kiểu là đi tiếp.',
+  type: 'sight',
+  chips,
+});
+
+const ACT_DINNER_YEN: Activity = {
+  time: '19:00',
+  title: 'Ăn tối',
+  desc: 'Bữa cơm đúng kiểu "ngon như mẹ nấu" — dân địa phương ăn ở đây thật.',
+  type: 'food',
+  options: [
+    { name: 'Yến — Ngon Như Mẹ Nấu', price: '~80.000–150.000đ/người', meta: 'TP. Cao Bằng', reason: 'Cơm nhà đậm vị, hợp sau một ngày chạy xe.', recommended: true, image: 'images/Food/yen-com-me-nau/1.jpg' },
+  ],
+};
+
+const ACT_DINNER_LAU_CA: Activity = {
+  time: '19:00',
+  title: 'Ăn tối',
+  desc: 'Kết ngày bằng nồi lẩu nghi ngút.',
+  type: 'food',
+  options: [
+    { name: 'Lẩu Cá Ngã Ba Sông', price: '~80.000–150.000đ/người', meta: 'TP. Cao Bằng', reason: 'Lẩu cá tươi, không gian rộng — hợp nhóm bạn, gia đình.', recommended: true },
+  ],
+};
+
+const ACT_REST_SEN: Activity = {
+  time: '21:00',
+  title: 'Nghỉ ngơi tại Sen\'s Homestay',
+  desc: 'Phòng riêng, tắm nóng, đệm sưởi — sạc pin cho ngày mai.',
+};
+
+const ACT_BUS_HOME: Activity = {
+  time: '20:30',
+  title: 'Lên xe về Hà Nội',
+  desc: 'Tắm nóng ở Sen\'s, nhận hành lý, đợi xe 20h30–21h ngay tại homestay — ngủ một giấc là về tới Hà Nội ~4h30.',
+};
+
+// ═══════════════ Data chương trình ═══════════════
+
 export const programsData: ProgramDetails[] = [
   {
     id: '2n1d',
@@ -133,13 +343,13 @@ export const programsData: ProgramDetails[] = [
     price: '2.150.000đ',
     priceNote: '/2 khách',
     days: 2,
-    spots: 6,
+    spots: 8,
     published: true,
     image: 'images/places/ban-gioc.jpg',
     highlights: [
       { name: 'Thác Bản Giốc', image: 'images/places/ban-gioc.jpg' },
       { name: 'Động Ngườm Ngao', image: 'images/places/nguom-ngao.jpg' },
-      { name: 'Làng đá Khuổi Ky', image: 'images/places/stone-village.jpg' },
+      { name: 'Đồi Cỏ Cháy', image: 'images/places/ba-quang.jpg' },
       { name: 'Núi Mắt Thần', image: 'images/places/eye-mountain.jpg' },
       { name: 'Hồ Thang Hen', image: 'images/places/thang-hen.jpg' },
       { name: 'Pác Bó', image: 'images/places/pac-bo.jpg' },
@@ -173,6 +383,7 @@ export const programsData: ProgramDetails[] = [
         'Phòng riêng: điều hoà, WC khép kín, nóng lạnh, đệm sưởi.',
         'Máy chiếu xem Netflix ngay trong phòng.',
         '3 phòng đôi 1 giường lớn & 3 phòng gia đình 2 giường lớn.',
+        'Chọn lộ trình 2: đêm nghỉ chuyển sang homestay trong làng đá Khuổi Ky.',
         'Ăn sáng tại homestay có phụ phí (không bao gồm trong giá combo).'
       ],
       image: 'images/homestay.jpg'
@@ -199,38 +410,139 @@ export const programsData: ProgramDetails[] = [
       ],
       image: 'images/services/shower.jpg'
     },
-    itinerary: [
+    itineraryOptions: [
       {
-        dayNumber: 1,
-        dayTitle: 'Thác Bản Giốc & Làng Đá Cổ',
-        activities: [
-          { time: '06:30', title: 'Ăn sáng phở vịt quay Cao Bằng', desc: 'Phở vịt quay nóng hổi tại quán Lâm địa phương ngon nổi tiếng cạnh bến xe.', image: 'images/Food/breakfast.jpg' },
-          { time: '07:15', title: 'Nhận xe máy & chuẩn bị hành trình', desc: 'Kiểm tra xe, nhận mũ bảo hiểm và bắt đầu đi Bản Giốc.', image: 'images/bikes/wave-alpha.jpg' },
-          { time: '07:30', title: 'Khởi hành đi Bản Giốc', desc: 'Cung đường 85km uốn lượn tuyệt đẹp qua đèo Mã Phục.' },
-          { time: '09:30', title: 'Check-in thác Bản Giốc', desc: 'Thác nước biên giới lớn nhất Đông Nam Á, góc chụp đẹp nhất lúc nắng sớm xiên.', image: 'images/places/ban-gioc.jpg' },
-          { time: '11:00', title: 'Khám phá Động Ngườm Ngao', desc: 'Hang động kỳ vĩ dài hơn 2000m với các thạch nhũ hình bông sen vàng độc đáo.', image: 'images/places/nguom-ngao.jpg' },
-          { time: '12:30', title: 'Ăn trưa đặc sản Trùng Khánh', desc: 'Cơm lam, gà đồi nướng thơm lừng tại nhà sàn ven suối.' },
-          { time: '14:30', title: 'Thăm Làng đá cổ Khuổi Ky', desc: 'Bản làng của người Tày với những ngôi nhà sàn bằng đá vững chãi hơn 400 năm tuổi.', image: 'images/places/stone-village.jpg' },
-          { time: '17:00', title: 'Nhận phòng Homestay & nghỉ ngơi', desc: 'Check-in phòng riêng tại homestay đá cổ, thư giãn nghe tiếng suối reo.' },
-          { time: '19:00', title: 'Bữa tối ấm cúng bếp lửa', desc: 'Lẩu gà đen nấu nấm rừng, thịt gác bếp bản địa cùng rượu ngô men lá ngọt nhẹ.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Chìm vào giấc ngủ giữa núi rừng, tiếng suối Khuổi Ky rì rào ru đêm.' }
-        ]
+        key: 'a',
+        label: 'Lộ trình 1 — đêm ở Sen\'s',
+        sub: 'Bản Giốc & hoàng hôn Đồi Cỏ Cháy · ngủ TP. Cao Bằng',
+        mapTripId: 'sen-2n1d-a',
+        mapTripDayMap: [1, 2],
+        itinerary: [
+          {
+            dayNumber: 1,
+            dayTitle: 'Bản Giốc – Ngườm Ngao – Đồi Cỏ Cháy',
+            mapStops: [MAP_PLACES.banGioc, MAP_PLACES.nguomNgao, MAP_PLACES.doiCoChay],
+            activities: [
+              ACT_ARRIVE,
+              ACT_BREAKFAST_CITY,
+              ACT_GET_BIKE,
+              { time: '07:30', title: 'Khởi hành đi Bản Giốc', desc: 'Cung 85km uốn qua đèo Mã Phục — đường đẹp, cứ thong thả mà chạy.' },
+              ACT_BAN_GIOC('09:30'),
+              ACT_NGUOM_NGAO('11:30'),
+              {
+                time: '13:00', title: 'Ăn trưa', desc: 'Dùng bữa gần thác trước khi chạy tiếp.',
+                type: 'food',
+                options: [
+                  { name: 'Nhà hàng Thác Bản Giốc', price: '~120.000–180.000đ/người', meta: 'Ngay khu du lịch', reason: 'Cá suối, lợn đen, rau rừng — đặc sản đủ món.', recommended: true },
+                ],
+              },
+              ACT_NGUOM_BANG('13:30', ['Thời lượng: 20–30 phút', 'Góc chụp: cửa hang nhìn thung lũng', 'Gửi xe ven đường']),
+              ACT_DOI_CO_CHAY('14:30', '16:00–17:30', '~2 giờ', true),
+              { time: '17:00', title: 'Quay về thành phố Cao Bằng', desc: 'Kết ngày đầu — về Sen\'s nghỉ ngơi, chuẩn bị cho buổi tối.' },
+              ACT_DINNER_YEN,
+              ACT_REST_SEN,
+            ],
+          },
+          {
+            dayNumber: 2,
+            dayTitle: 'Pác Bó – Bản Giàng – Thang Hen – Mắt Thần',
+            mapStops: [MAP_PLACES.pacBo, MAP_PLACES.banGiang, MAP_PLACES.thangHen, MAP_PLACES.matThan],
+            activities: [
+              ACT_BREAKFAST_CITY,
+              { time: '07:30', title: 'Khởi hành đi Pác Bó', desc: 'Chạy dọc biên giới hướng Hà Quảng — khoảng 9h là tới.' },
+              ACT_PAC_BO('09:00'),
+              ACT_BAN_GIANG,
+              ACT_LUNCH_HA_QUANG,
+              ACT_THANG_HEN('13:30', '13:30–15:00', '~1,5 giờ'),
+              ACT_MAT_THAN('15:30', '16–18h (hoàng hôn)'),
+              { time: '17:00', title: 'Quay về thành phố Cao Bằng', desc: 'Trả xe máy, mua ít đặc sản mang về.' },
+              ACT_DINNER_LAU_CA,
+              ACT_BUS_HOME,
+            ],
+          },
+        ],
       },
       {
-        dayNumber: 2,
-        dayTitle: 'Núi Mắt Thần & Trở về',
-        activities: [
-          { time: '07:30', title: 'Ăn sáng tại homestay', desc: 'Bánh cuốn Cao Bằng nước canh xương nóng hổi tự làm tại làng.' },
-          { time: '08:30', title: 'Check-out & Khởi hành đi Núi Mắt Thần', desc: 'Đi dọc thung lũng Trà Lĩnh về núi Mắt Thần.' },
-          { time: '10:00', title: 'Cắm trại thung lũng núi Mắt Thần', desc: 'Bãi cỏ xanh thảo nguyên bao la quanh ngọn núi có lỗ thủng xuyên tâm độc nhất vô nhị.', image: 'images/places/eye-mountain.jpg' },
-          { time: '12:30', title: 'Ăn trưa dã ngoại', desc: 'Bữa trưa nhẹ dã ngoại giữa thung lũng cỏ xanh.' },
-          { time: '14:30', title: 'Quay về Tp. Cao Bằng', desc: 'Đường về qua đèo Cao Bắc, ngắm núi rừng xanh ngát.' },
-          { time: '17:30', title: 'Trả xe máy & mua sắm đặc sản', desc: 'Mua lạp sườn, hạt dẻ Trùng Khánh làm quà.' },
-          { time: '19:00', title: 'Ăn tối nhẹ Tp. Cao Bằng', desc: 'Thưởng thức bánh áp chao hoặc phở chua Cao Bằng trước khi về.' },
-          { time: '20:30', title: 'Lên xe Limousine về Hà Nội', desc: 'Cabin VIP đưa bạn chìm vào giấc ngủ sâu, kết thúc hành trình lúc 04:30 sáng hôm sau.' }
-        ]
-      }
-    ]
+        key: 'b',
+        label: 'Lộ trình 2 — đêm làng đá',
+        sub: 'Pỉ Pha & Bản Giốc · ngủ trong làng đá Khuổi Ky',
+        mapTripId: 'sen-2n1d-b',
+        mapTripDayMap: [1, 2],
+        itinerary: [
+          {
+            dayNumber: 1,
+            dayTitle: 'Pỉ Pha – Bản Giốc – Làng đá (ngủ bản)',
+            mapStops: [MAP_PLACES.piPha, MAP_PLACES.phatTich, MAP_PLACES.banGioc, MAP_PLACES.khuoiKy, MAP_PLACES.nguomNgao],
+            activities: [
+              { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe đón bạn về homestay nghỉ ngơi, vệ sinh cá nhân và chuẩn bị nhận xe.' },
+              ACT_BREAKFAST_CITY,
+              ACT_GET_BIKE,
+              { time: '07:30', title: 'Khởi hành đi Trùng Khánh', desc: 'Cung 85km qua đèo Mã Phục — vừa chạy vừa ngắm là ~2 tiếng.' },
+              ACT_PI_PHA('09:30', ['Thời lượng: ~1 giờ', 'Leo núi: ~30 phút', 'Góc chụp: các điểm check-in trên đỉnh']),
+              { ...ACT_PHAT_TICH('10:45', '~30 phút'), desc: 'Ghé nếu kịp giờ — đứng sân chùa nhìn xuống trọn Thác Bản Giốc.' },
+              {
+                ...ACT_BAN_GIOC('11:30'),
+                chips: ['Thời lượng: ~1,5 giờ', 'Bè tre: tuỳ chọn', 'Góc chụp: quảng trường & cầu đi bộ', 'Có bãi gửi xe'],
+                tip: undefined,
+              },
+              {
+                time: '13:00', title: 'Ăn trưa khu Bản Giốc', desc: 'Ăn xong là về làng đá nhận phòng luôn.',
+                type: 'food',
+                options: [
+                  { name: 'Yến Nhi Homestay (làng đá)', meta: 'Ăn trưa + nhận phòng luôn', reason: 'Tiện một công đôi việc — ăn xong nghỉ trưa tại chỗ.', recommended: true },
+                  { name: 'Nhà hàng gần thác', price: '~120.000–180.000đ/người', reason: 'Đặc sản đủ món ngay khu du lịch.' },
+                ],
+              },
+              {
+                time: '14:00', title: 'Nhận phòng & dạo Làng đá Khuổi Ky', desc: 'Bản đá 400 năm tuổi của người Tày — check-in cầu đá, đi chân trần nghe suối chảy.',
+                type: 'sight',
+                image: 'images/places/stone-village.jpg',
+                chips: ['Nhà sàn đá 400+ năm', 'Góc chụp: cầu đá qua suối'],
+              },
+              ACT_NGUOM_NGAO('15:30'),
+              {
+                time: '18:30', title: 'Ăn tối tại homestay làng đá', desc: 'Cơm bản địa trong không gian bản đá cổ.',
+                type: 'food',
+                options: [
+                  { name: 'Bữa tối tại homestay', reason: 'Đặc sản địa phương, không phải chạy xe buổi tối.', recommended: true },
+                ],
+              },
+              { time: '21:00', title: 'Nghỉ đêm tại làng đá Khuổi Ky', desc: 'Đêm giữa bản đá cổ — chỉ còn tiếng suối và trời sao.' },
+            ],
+          },
+          {
+            dayNumber: 2,
+            dayTitle: 'Ngườm Bàng – Đồi Cỏ Cháy – Mắt Thần – Thang Hen',
+            mapStops: [MAP_PLACES.doiCoChay, MAP_PLACES.matThan, MAP_PLACES.thangHen],
+            activities: [
+              {
+                time: '07:00', title: 'Ăn sáng tại homestay', desc: 'Ăn tại chỗ cho gọn, chuẩn bị check-out.',
+                type: 'food',
+                options: [
+                  { name: 'Bữa sáng tại homestay', reason: 'Tiện, tiết kiệm thời gian cho cả ngày dài.', recommended: true, image: 'images/Food/breakfast.jpg' },
+                ],
+              },
+              { time: '08:00', title: 'Check-out & khởi hành', desc: 'Rời làng đá, chạy hướng Quảng Hoà – Trà Lĩnh.' },
+              ACT_NGUOM_BANG('08:30', ['Đẹp nhất: 8–10h', 'Thời lượng: ~30 phút', 'Có bãi gửi xe', 'Không cần trekking']),
+              ACT_DOI_CO_CHAY('09:30', '8–11h', '~1,5 giờ'),
+              {
+                time: '11:30', title: 'Ăn trưa', desc: 'Nghỉ chân trước chặng chiều.',
+                type: 'food',
+                options: [
+                  { name: 'Mế Farmstay', price: '~100.000–180.000đ/người', meta: 'Thuận đường đến Mắt Thần', reason: 'Không gian đẹp, món địa phương.', recommended: true },
+                  { name: 'Quán cơm Quảng Hoà', reason: 'Phục vụ nhanh, giá hợp lý.' },
+                ],
+              },
+              ACT_MAT_THAN('13:30', '14:00–16:30'),
+              ACT_THANG_HEN('15:30', '15:30–17:00', '~1 giờ'),
+              { time: '17:00', title: 'Về thành phố Cao Bằng', desc: 'Trả xe máy, tắm nóng ở Sen\'s cho tỉnh người.' },
+              { time: '18:00', title: 'Ăn tối trước giờ xe chạy', desc: 'Còn thời gian thì làm bữa tối ở thành phố — Yến Ngon Như Mẹ Nấu hoặc Lẩu Cá Ngã Ba Sông.' },
+              ACT_BUS_HOME,
+            ],
+          },
+        ],
+      },
+    ],
   },
   {
     id: '3n2d',
@@ -240,7 +552,7 @@ export const programsData: ProgramDetails[] = [
     price: '2.850.000đ',
     priceNote: '/2 khách',
     days: 3,
-    spots: 10,
+    spots: 12,
     published: true,
     image: 'images/places/eye-mountain.jpg',
     highlights: [
@@ -276,7 +588,7 @@ export const programsData: ProgramDetails[] = [
     },
     homestayInfo: {
       title: '01 đêm tại Sen\'s Homestay',
-      desc: 'Một đêm nghỉ ở Sen\'s Homestay: phòng riêng, tắm nóng, đệm sưởi, ngủ lại sức.',
+      desc: 'Đêm đầu nghỉ ở Sen\'s Homestay: phòng riêng, tắm nóng, đệm sưởi, ngủ lại sức.',
       details: [
         'Phòng riêng: điều hoà, WC khép kín, nóng lạnh, đệm sưởi.',
         'Máy chiếu xem Netflix ngay trong phòng.',
@@ -286,17 +598,17 @@ export const programsData: ProgramDetails[] = [
       image: 'images/homestay.jpg'
     },
     extraStayInfo: {
-      tabLabel: 'Đêm Đồi Cỏ Cháy',
-      tabSub: 'Ngủ giữa thảo nguyên',
-      title: 'Đêm ở Đồi Cỏ Cháy',
-      desc: 'Điểm riêng của combo 3N2Đ: ngủ giữa đồi cỏ. Chiều ngắm hoàng hôn, tối ngắm sao, sáng mở cửa gặp bình minh.',
+      tabLabel: 'Đêm làng đá',
+      tabSub: 'Ngủ giữa bản đá cổ',
+      title: 'Đêm thứ 2 ở làng đá Khuổi Ky',
+      desc: 'Điểm riêng của combo 3N2Đ: một đêm trong bản đá 400 năm tuổi cạnh dòng Quây Sơn — chiều tắm suối, tối nghe tiếng nước chảy.',
       details: [
-        'Ngủ giữa đồi cỏ, yên tĩnh và riêng tư.',
-        'Hoàng hôn, trời sao, bình minh ngay trước chỗ ngủ.',
-        'Đêm trên đồi se lạnh kể cả mùa hè — có chăn ấm.',
-        'Thời tiết xấu có phương án nghỉ thay thế — Sen xác nhận cụ thể khi chốt lịch.'
+        'Nghỉ tại homestay trong làng đá Khuổi Ky (Yến Nhi Homestay).',
+        'Chiều thư giãn ở sông Quây Sơn, ngắm hoàng hôn Cầu Pác Sắc Ngà.',
+        'Chọn lộ trình 2: đêm nghỉ tại Thàng Khám — tắm suối ngay trước homestay.',
+        'Bữa tối đặc sản tại homestay ~150.000–250.000đ/người (tự chọn, trả tại chỗ).'
       ],
-      image: 'images/places/ba-quang.jpg'
+      image: 'images/places/stone-village.jpg'
     },
     night1Info: {
       title: 'Check-in sớm sau xe đêm',
@@ -320,79 +632,212 @@ export const programsData: ProgramDetails[] = [
       ],
       image: 'images/services/shower.jpg'
     },
-    itinerary: [
+    itineraryOptions: [
       {
-        dayNumber: 1,
-        dayTitle: 'Thác Bản Giốc & Ngườm Ngao',
-        activities: [
-          { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe đón bạn tại bến về văn phòng nghỉ ngơi.' },
+        key: 'a',
+        label: 'Lộ trình 1 — đêm làng đá',
+        sub: 'Quây Sơn & Đồi Cỏ Cháy · ngủ Yến Nhi (Khuổi Ky)',
+        mapTripId: 'sen-3n2d-a',
+        mapTripDayMap: [1, 2, 3],
+        itinerary: [
           {
-            time: '06:30',
-            title: 'Ăn sáng',
-            desc: 'Hai lựa chọn ngon gần điểm nhận xe — chọn theo khẩu vị.',
-            type: 'food',
-            options: [
-              { name: 'Phở vịt quay quán Lâm', price: '~40.000đ', meta: 'Cạnh bến xe · mở từ 6h', reason: 'Vịt quay da giòn, nước dùng đậm — món trứ danh Cao Bằng.', recommended: true, image: 'images/Food/breakfast.jpg' },
-              { name: 'Bánh cuốn canh', price: '~30.000đ', meta: 'Gần chợ · ăn nhanh', reason: 'Nhẹ bụng, hợp nếu muốn xuất phát sớm đi Bản Giốc.', image: 'images/Food/banh-cuon/1.jpg' },
+            dayNumber: 1,
+            dayTitle: 'Pác Bó – Lũng Luông – Thang Hen – Mắt Thần',
+            mapStops: [MAP_PLACES.pacBo, MAP_PLACES.lungLuong, MAP_PLACES.banGiang, MAP_PLACES.thangHen, MAP_PLACES.matThan],
+            activities: [
+              { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe đón bạn về homestay nghỉ ngơi, vệ sinh cá nhân và chuẩn bị nhận xe.' },
+              ACT_BREAKFAST_CITY,
+              ACT_GET_BIKE,
+              { time: '07:30', title: 'Khởi hành đi Pác Bó', desc: 'Chạy dọc biên giới hướng Hà Quảng — khoảng 8h30 là tới.' },
+              ACT_PAC_BO('08:30'),
+              {
+                time: '10:30', title: 'Ngắm thung lũng Lũng Luông', desc: 'Điểm ngắm thung lũng từ trên cao được ghi dấu trong Công viên địa chất UNESCO.',
+                type: 'sight',
+                image: 'images/places/lung-luong.jpg',
+                chips: ['Thời lượng: ~30 phút', 'Góc chụp: từ trên cao', 'Đẹp nhất: sáng có nắng'],
+              },
+              ACT_BAN_GIANG,
+              ACT_LUNCH_HA_QUANG,
+              ACT_THANG_HEN('13:30', '13:30–15:00', '~1,5 giờ'),
+              ACT_MAT_THAN('15:30', '16–18h (hoàng hôn)'),
+              { time: '17:00', title: 'Quay về thành phố Cao Bằng', desc: 'Về Sen\'s nghỉ ngơi sau ngày đầu chạy cung Tây.' },
+              ACT_DINNER_LAU_CA,
+              ACT_REST_SEN,
             ],
           },
-          { time: '07:15', title: 'Nhận xe máy đầy xăng', desc: 'Honda Wave Alpha đã kiểm tra lốp, phanh kỹ càng, kèm mũ 2/3, giá đỡ điện thoại & áo mưa.', image: 'images/bikes/wave-alpha.jpg' },
-          { time: '07:30', title: 'Khởi hành đi Bản Giốc', desc: 'Hành trình 85km đi dọc theo đèo Mã Phục trùng điệp.' },
           {
-            time: '09:30',
-            title: 'Khám phá thác Bản Giốc',
-            desc: 'Thác nước biên giới lớn nhất Đông Nam Á — điểm nhấn của cả hành trình.',
-            type: 'sight',
-            image: 'images/places/ban-gioc.jpg',
-            chips: ['Đẹp nhất: 8–10h sáng', 'Thời lượng: ~2 giờ', 'Góc chụp: bè tre trên sông', 'Có bãi gửi xe'],
-            tip: 'Nếu trời mưa: đảo lịch xuống chiều, sáng ghé Động Ngườm Ngao trước.',
-          },
-          { time: '11:00', title: 'Thăm động Ngườm Ngao', desc: 'Chiêm ngưỡng hệ thống thạch nhũ vàng óng và suối ngầm kỳ thú.', image: 'images/places/nguom-ngao.jpg' },
-          {
-            time: '12:00',
-            title: 'Ăn trưa',
-            desc: 'Đặc sản Trùng Khánh gần Bản Giốc.',
-            type: 'food',
-            options: [
-              { name: 'Nhà sàn ven suối Khuổi Ky', price: '~150.000đ/người', meta: 'Không gian mát · yên tĩnh', reason: 'Cơm lam, lợn mán quay, rau dạ hiến — đúng vị bản địa.', recommended: true },
-              { name: 'Quán ăn thị trấn Trùng Khánh', price: '~120.000đ/người', meta: 'Tiện đường · phục vụ nhanh', reason: 'Hợp nếu muốn tiết kiệm thời gian cho buổi chiều.' },
+            dayNumber: 2,
+            dayTitle: 'Làng giấy – Đồi Cỏ Cháy – Ngườm Ngao – Quây Sơn',
+            mapStops: [MAP_PLACES.langGiay, MAP_PLACES.doiCoChay, MAP_PLACES.khuoiKy, MAP_PLACES.nguomNgao, MAP_PLACES.quaySon],
+            activities: [
+              ACT_BREAKFAST_CITY,
+              {
+                time: '07:30', title: 'Tham quan Làng giấy Dìa Trên', desc: 'Làng nghề giấy bản yên bình dưới chân núi — đường làng, ruộng lúa, nhà truyền thống.',
+                type: 'sight',
+                image: 'images/places/dia-tren-village-paper.jpg',
+                chips: ['Thời lượng: ~45 phút', 'Góc chụp: đường làng, ruộng lúa'],
+              },
+              ACT_DOI_CO_CHAY('08:30', '6–11h', '~1,5 giờ'),
+              {
+                time: '11:30', title: 'Ăn trưa tại Yến Nhi Homestay', desc: 'Về làng đá ăn trưa rồi nhận phòng nghỉ luôn.',
+                type: 'food',
+                options: [
+                  { name: 'Yến Nhi Homestay', price: '~120.000–180.000đ/người', meta: 'Ngay nơi lưu trú', reason: 'Món địa phương, ăn xong nghỉ trưa tại chỗ.', recommended: true },
+                ],
+              },
+              { time: '12:30', title: 'Nhận phòng Yến Nhi Homestay', desc: 'Homestay trong làng đá Khuổi Ky — nghỉ trưa, thư giãn trước chặng chiều.' },
+              ACT_NGUOM_NGAO('14:30'),
+              {
+                time: '16:00', title: 'Thư giãn ở Sông Quây Sơn', desc: 'Dòng sông xanh ngọc của Trùng Khánh — ngâm chân, tắm suối hoặc ngồi ngắm núi.',
+                type: 'sight',
+                image: 'images/places/swimming-quay-son-river.jpg',
+                chips: ['Đẹp nhất: 16–18h', 'Thời lượng: ~1,5–2 giờ', 'Ngâm chân, tắm suối'],
+                tip: 'Mùa mưa nước chảy mạnh — theo hướng dẫn an toàn.',
+              },
+              {
+                time: '17:30', title: 'Hoàng hôn ở Cầu Pác Sắc Ngà', desc: 'Đứng cầu treo ngắm hoàng hôn rơi trên dòng Quây Sơn — kiểu ảnh chốt ngày.',
+                type: 'sight',
+                image: 'images/places/pac-nga-hanging-bridge.jpg',
+                chips: ['Thời lượng: ~30 phút'],
+              },
+              {
+                time: '19:00', title: 'Ăn tối tại homestay', desc: 'Bữa tối giữa làng đá cổ.',
+                type: 'food',
+                options: [
+                  { name: 'Bữa tối tại Yến Nhi Homestay', price: '~150.000–250.000đ/người', reason: 'Thực đơn đặc sản trong không gian bản đá yên bình.', recommended: true },
+                ],
+              },
+              { time: '21:00', title: 'Nghỉ đêm giữa làng đá Khuổi Ky', desc: 'Đêm trong bản đá 400 năm — chỉ còn tiếng suối và trời sao.' },
             ],
           },
-          { time: '14:00', title: 'Làng đá cổ Khuổi Ky', desc: 'Ngắm những nếp nhà sàn đá Tày, check-in cây cầu đá bắc qua suối.', image: 'images/places/stone-village.jpg' },
-          { time: '17:00', title: 'Check-in Homestay nghỉ ngơi', desc: 'Nhận phòng Suite view núi thơ mộng.' },
-          { time: '19:00', title: 'Ăn tối lẩu gà đen', desc: 'Lẩu gà đen nấm rừng nghi ngút khói bên hiên nhà sàn.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Nhâm nhi chén trà nóng bên hiên nhà sàn, ngắm trời đêm đầy sao rồi ngủ sớm lấy sức.' }
-        ]
+          {
+            dayNumber: 3,
+            dayTitle: 'Chùa Phật Tích – Bản Giốc – Pỉ Pha',
+            mapStops: [MAP_PLACES.phatTich, MAP_PLACES.banGioc, MAP_PLACES.piPha],
+            activities: [
+              {
+                time: '07:00', title: 'Ăn sáng tại homestay', desc: 'Ăn tại chỗ rồi lên đường sớm.',
+                type: 'food',
+                options: [
+                  { name: 'Bữa sáng tại Yến Nhi Homestay', reason: 'Tiện và tiết kiệm thời gian cho ngày cuối.', recommended: true, image: 'images/Food/breakfast.jpg' },
+                ],
+              },
+              ACT_PHAT_TICH('08:00', '~1 giờ'),
+              {
+                ...ACT_BAN_GIOC('09:30'),
+                chips: ['Đẹp nhất: 9–11h', 'Thời lượng: ~2 giờ', 'Bè tre ra gần chân thác', 'Có bãi gửi xe'],
+                tip: 'Thời tiết đẹp thì mua vé đi bè — đứng gần chân thác mới thấy đã.',
+              },
+              {
+                time: '12:00', title: 'Ăn trưa', desc: 'Đặc sản gần khu du lịch thác.',
+                type: 'food',
+                options: [
+                  { name: 'Nhà hàng Thác Bản Giốc', price: '~120.000–180.000đ/người', reason: 'Cá suối, gà đồi, lợn đen, rau rừng.', recommended: true },
+                ],
+              },
+              ACT_PI_PHA('14:00', ['Đẹp nhất: 15:00–17:30', 'Thời lượng: ~2 giờ', 'Có quán đồ uống', 'Có bãi gửi xe']),
+              { time: '16:30', title: 'Quay về thành phố Cao Bằng', desc: 'Trả xe máy, tắm nóng ở Sen\'s, nhận lại hành lý.' },
+              ACT_DINNER_YEN,
+              { ...ACT_BUS_HOME, title: 'Đợi xe tại Sen\'s Homestay', desc: 'Xe đón 20h30–21h ngay tại homestay — ngủ một giấc là về tới Hà Nội ~4h30.' },
+            ],
+          },
+        ],
       },
       {
-        dayNumber: 2,
-        dayTitle: 'Hồ Thang Hen & Núi Mắt Thần',
-        activities: [
-          { time: '07:30', title: 'Ăn sáng tại homestay', desc: 'Bánh cuốn canh xương ngọt thanh rắc hành phi thơm.' },
-          { time: '08:30', title: 'Khám phá Quần thể hồ Thang Hen', desc: 'Đi dọc tuyến đường thung lũng Trà Lĩnh xanh mướt đến cụm 36 hồ Thang Hen.', image: 'images/places/thang-hen.jpg' },
-          { time: '10:30', title: 'Dạo thuyền hồ Thang Hen', desc: 'Hồ nước ngọt trong xanh như ngọc bích nằm giữa lòng núi đá vôi.' },
-          { time: '12:00', title: 'Ăn trưa ẩm thực hồ', desc: 'Cá suối chiên giòn, xôi nếp nương thơm dẻo.' },
-          { time: '14:00', title: 'Khám phá thảo nguyên núi Mắt Thần', desc: 'Tự do chạy xe máy trên bãi cỏ mênh mông, ngắm trâu bò gặm cỏ thanh bình dưới chân núi Thủng.', image: 'images/places/eye-mountain.jpg' },
-          { time: '17:30', title: 'Trở về homestay Khuổi Ky', desc: 'Nghỉ ngơi sau ngày chạy xe máy dài.' },
-          { time: '19:00', title: 'Ăn tối thịt nướng bản dã', desc: 'Thịt ba chỉ nướng lá mắc mật, lạp sườn nướng than hoa.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Đêm thứ hai ở bản đá — quen hơi núi rừng, giấc ngủ đến nhanh và sâu hơn.' }
-        ]
+        key: 'b',
+        label: 'Lộ trình 2 — đêm Thàng Khám',
+        sub: 'Tắm suối Thàng Khám · trải nghiệm Nùng Indigo',
+        mapTripId: 'sen-3n2d-b',
+        mapTripDayMap: [1, 2, 3],
+        itinerary: [
+          {
+            dayNumber: 1,
+            dayTitle: 'Pác Bó – Lũng Luông – Thang Hen – Mắt Thần',
+            mapStops: [MAP_PLACES.pacBo, MAP_PLACES.lungLuong, MAP_PLACES.banGiang, MAP_PLACES.thangHen, MAP_PLACES.matThan],
+            activities: [
+              { time: '06:00', title: 'Đến Cao Bằng', desc: 'Xe đón bạn về homestay nghỉ ngơi, vệ sinh cá nhân và chuẩn bị nhận xe.' },
+              ACT_BREAKFAST_CITY,
+              ACT_GET_BIKE,
+              { time: '07:30', title: 'Khởi hành đi Pác Bó', desc: 'Chạy dọc biên giới hướng Hà Quảng — khoảng 8h30 là tới.' },
+              ACT_PAC_BO('08:30'),
+              {
+                time: '10:30', title: 'Ngắm thung lũng Lũng Luông', desc: 'Điểm ngắm thung lũng từ trên cao được ghi dấu trong Công viên địa chất UNESCO.',
+                type: 'sight',
+                image: 'images/places/lung-luong.jpg',
+                chips: ['Thời lượng: ~30 phút', 'Góc chụp: từ trên cao', 'Đẹp nhất: sáng có nắng'],
+              },
+              ACT_BAN_GIANG,
+              ACT_LUNCH_HA_QUANG,
+              ACT_THANG_HEN('13:30', '13:30–15:00', '~1,5 giờ'),
+              ACT_MAT_THAN('15:30', '16–18h (hoàng hôn)'),
+              { time: '17:00', title: 'Quay về thành phố Cao Bằng', desc: 'Về Sen\'s nghỉ ngơi sau ngày đầu chạy cung Tây.' },
+              ACT_DINNER_LAU_CA,
+              ACT_REST_SEN,
+            ],
+          },
+          {
+            dayNumber: 2,
+            dayTitle: 'Chùa Phật Tích – Bản Giốc – Ngườm Ngao – Thàng Khám',
+            mapStops: [MAP_PLACES.phatTich, MAP_PLACES.banGioc, MAP_PLACES.nguomNgao, MAP_PLACES.thangKham],
+            activities: [
+              ACT_BREAKFAST_CITY,
+              { time: '07:30', title: 'Khởi hành đi Trùng Khánh', desc: 'Cung 85km, chạy thong thả khoảng 2–2,5 tiếng.' },
+              { ...ACT_PHAT_TICH('09:45', '30–45 phút') },
+              {
+                ...ACT_BAN_GIOC('10:30'),
+                chips: ['Thời lượng: 1,5–2 giờ', 'Bè tre (nếu trời đẹp)', 'Góc chụp: quảng trường & cầu đi bộ', 'Có bãi gửi xe'],
+                tip: undefined,
+              },
+              {
+                time: '12:30', title: 'Ăn trưa khu Bản Giốc', desc: 'Món nên thử: cá suối, gà đồi, lợn đen, xôi trám.',
+                type: 'food',
+                options: [
+                  { name: 'Yến Nhi Homestay', price: '~120.000–180.000đ/người', reason: 'Không gian làng đá, món bản địa.', recommended: true },
+                  { name: 'Nhà hàng gần Thác Bản Giốc', price: '~120.000–180.000đ/người', reason: 'Ngay khu du lịch, đủ món đặc sản.' },
+                ],
+              },
+              ACT_NGUOM_NGAO('14:00'),
+              { time: '16:00', title: 'Nhận phòng tại Thàng Khám', desc: 'Check-in homestay bên thác Thàng Khám, nghỉ ngơi sau hành trình.' },
+              {
+                time: '16:30', title: 'Tắm suối Thàng Khám', desc: 'Thác và suối ngay trước homestay — tắm hoặc ngâm chân, thả lỏng giữa núi rừng.',
+                type: 'sight',
+                image: 'images/places/thang-kham.jpg',
+                chips: ['Ngay trước homestay', 'Đẹp nhất: cuối chiều'],
+              },
+              { time: '18:30', title: 'Ăn tối tại Thàng Khám', desc: 'Bữa tối đặc sản địa phương, tối tự do thư giãn.' },
+              { time: '21:00', title: 'Nghỉ đêm tại Thàng Khám', desc: 'Không khí trong lành, yên tĩnh — ngủ sớm cho ngày mai.' },
+            ],
+          },
+          {
+            dayNumber: 3,
+            dayTitle: 'Đồi Cỏ Cháy – Nùng Indigo Workshop',
+            mapStops: [MAP_PLACES.doiCoChay, MAP_PLACES.nungIndigo],
+            activities: [
+              { time: '07:30', title: 'Ăn sáng & check-out', desc: 'Ăn sáng tại Thàng Khám, dọn hành lý lên đường.' },
+              { time: '09:00', title: 'Khởi hành đến Đồi Cỏ Cháy', desc: 'Chạy khoảng 15–20 phút sang Vinh Quý.' },
+              ACT_DOI_CO_CHAY('09:20', '8–11h', '~2 giờ'),
+              { time: '11:30', title: 'Di chuyển đến Nùng Indigo Workshop', desc: 'Rời đồi cỏ, chạy về hướng Quảng Uyên.' },
+              {
+                time: '12:00', title: 'Ăn trưa tại Nùng Indigo', desc: 'Bữa cơm địa phương trong không gian truyền thống người Nùng An.',
+                type: 'food',
+                options: [
+                  { name: 'Cơm địa phương tại workshop', reason: 'Ăn tại chỗ, nghỉ ngơi trước khi vào trải nghiệm.', recommended: true },
+                ],
+              },
+              {
+                time: '13:00', title: 'Trải nghiệm Nùng Indigo Workshop', desc: 'Vẽ sáp ong bằng bút đồng, tự tay nhuộm chàm — mang sản phẩm về làm kỷ niệm.',
+                type: 'sight',
+                chips: ['Thời lượng: ~2,5–3 giờ', 'Có sản phẩm mang về', 'Giao lưu cùng nghệ nhân'],
+              },
+              { time: '16:00', title: 'Khởi hành về thành phố', desc: 'Khoảng 35km — chạy 50–60 phút là tới.' },
+              { time: '17:00', title: 'Về Sen\'s Homestay', desc: 'Trả xe, tắm nóng, thay đồ sạch và nhận lại hành lý.' },
+              { time: '18:30', title: 'Ăn tối', desc: 'Yến Ngon Như Mẹ Nấu hoặc Lẩu Cá Ngã Ba Sông — chốt hành trình bằng một bữa ra trò.' },
+              { ...ACT_BUS_HOME, title: 'Đợi xe tại Sen\'s Homestay', desc: 'Xe đón 20h30–21h ngay tại homestay — ngủ một giấc là về tới Hà Nội ~4h30.' },
+            ],
+          },
+        ],
       },
-      {
-        dayNumber: 3,
-        dayTitle: 'Suối Lê-nin, Pác Bó & Quay về',
-        activities: [
-          { time: '07:30', title: 'Ăn sáng & Check-out', desc: 'Thưởng thức xôi ngũ sắc và cafe nóng trước khi trả phòng.' },
-          { time: '08:30', title: 'Khởi hành đi Khu di tích Pác Bó', desc: 'Tuyến đường đi Pác Bó qua các bản làng thanh bình dọc biên giới.' },
-          { time: '10:30', title: 'Thăm suối Lê-nin, hang Cốc Bó', desc: 'Nước suối Lê-nin xanh vắt nhìn thấu đáy, hang đá Bác Hồ từng sống và làm việc.', image: 'images/places/pac-bo.jpg' },
-          { time: '12:30', title: 'Ăn trưa tại Pác Bó', desc: 'Thưởng thức măng rừng luộc, cá suối nướng tại lán ven suối.' },
-          { time: '14:30', title: 'Quay về Tp. Cao Bằng', desc: 'Đường về rực rỡ nắng chiều.' },
-          { time: '16:30', title: 'Trả xe máy & mua sắm quà lưu niệm', desc: 'Mua miến dong phia oắc, hạt dẻ chín Trùng Khánh.' },
-          { time: '18:00', title: 'Bữa tối kết thúc hành trình', desc: 'Phở chua Cao Bằng nức tiếng.' },
-          { time: '20:30', title: 'Lên xe Limousine cabin về lại Hà Nội', desc: 'Ngủ một giấc ngon lành trên cabin VIP và thức dậy tại Hà Nội lúc 04:30.' }
-        ]
-      }
-    ]
+    ],
   },
   {
     id: '4n3d',
@@ -467,63 +912,71 @@ export const programsData: ProgramDetails[] = [
       ],
       image: 'images/services/shower.jpg'
     },
-    itinerary: [
+    // Nội dung 4N3Đ là placeholder (chưa phát hành) — giữ lịch cũ trong 1 lộ trình.
+    itineraryOptions: [
       {
-        dayNumber: 1,
-        dayTitle: 'Thác Bản Giốc & Động Ngườm Ngao',
-        activities: [
-          { time: '06:30', title: 'Ăn sáng đặc sản', desc: 'Phở vịt quay Cao Bằng nức tiếng.', image: 'images/Food/breakfast.jpg' },
-          { time: '07:15', title: 'Nhận xe máy Honda Wave Alpha', desc: 'Đầy xăng, kèm mũ 2/3, giá đỡ điện thoại & áo mưa tiện lợi.', image: 'images/bikes/wave-alpha.jpg' },
-          { time: '07:30', title: 'Chinh phục đèo Mã Phục & Khau Liêu', desc: '2 con đèo kỳ vĩ bậc nhất trên đường đi Bản Giốc.' },
-          { time: '09:45', title: 'Thác Bản Giốc mùa nước đổ', desc: 'Góc chụp ảnh thác nước đẹp mê hồn từ dòng sông Quây Sơn.', image: 'images/places/ban-gioc.jpg' },
-          { time: '11:45', title: 'Động Ngườm Ngao tráng lệ', desc: 'Khám phá thế giới thạch nhũ lung linh ngàn năm.', image: 'images/places/nguom-ngao.jpg' },
-          { time: '13:00', title: 'Ăn trưa hạt dẻ nướng & đặc sản', desc: 'Cơm lam, vịt quay, canh rau cải nương.' },
-          { time: '14:30', title: 'Cầu đá & Suối cổ Khuổi Ky', desc: 'Ngắm dòng suối chảy qua làng đá cổ.', image: 'images/places/stone-village.jpg' },
-          { time: '17:00', title: 'Check-in Homestay Deluxe', desc: 'Nhận phòng ban công view suối tuyệt đẹp.' },
-          { time: '19:00', title: 'Bữa tối lẩu gà rừng nấu lá giang', desc: 'Thưởng thức tại homestay ấm cúng.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Thư giãn trên ban công view suối, chìm vào giấc ngủ trong tiếng nước chảy.' }
-        ]
+        key: 'a',
+        label: 'Lịch trình',
+        sub: '',
+        itinerary: [
+          {
+            dayNumber: 1,
+            dayTitle: 'Thác Bản Giốc & Động Ngườm Ngao',
+            activities: [
+              { time: '06:30', title: 'Ăn sáng đặc sản', desc: 'Phở vịt quay Cao Bằng nức tiếng.', image: 'images/Food/breakfast.jpg' },
+              { time: '07:15', title: 'Nhận xe máy Honda Wave Alpha', desc: 'Đầy xăng, kèm mũ 2/3, giá đỡ điện thoại & áo mưa tiện lợi.', image: 'images/bikes/wave-alpha.jpg' },
+              { time: '07:30', title: 'Chinh phục đèo Mã Phục & Khau Liêu', desc: '2 con đèo kỳ vĩ bậc nhất trên đường đi Bản Giốc.' },
+              { time: '09:45', title: 'Thác Bản Giốc mùa nước đổ', desc: 'Góc chụp ảnh thác nước đẹp mê hồn từ dòng sông Quây Sơn.', image: 'images/places/ban-gioc.jpg' },
+              { time: '11:45', title: 'Động Ngườm Ngao tráng lệ', desc: 'Khám phá thế giới thạch nhũ lung linh ngàn năm.', image: 'images/places/nguom-ngao.jpg' },
+              { time: '13:00', title: 'Ăn trưa hạt dẻ nướng & đặc sản', desc: 'Cơm lam, vịt quay, canh rau cải nương.' },
+              { time: '14:30', title: 'Cầu đá & Suối cổ Khuổi Ky', desc: 'Ngắm dòng suối chảy qua làng đá cổ.', image: 'images/places/stone-village.jpg' },
+              { time: '17:00', title: 'Check-in Homestay Deluxe', desc: 'Nhận phòng ban công view suối tuyệt đẹp.' },
+              { time: '19:00', title: 'Bữa tối lẩu gà rừng nấu lá giang', desc: 'Thưởng thức tại homestay ấm cúng.' },
+              { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Thư giãn trên ban công view suối, chìm vào giấc ngủ trong tiếng nước chảy.' }
+            ]
+          },
+          {
+            dayNumber: 2,
+            dayTitle: 'Hồ Thang Hen & Thảo Nguyên Núi Mắt Thần',
+            activities: [
+              { time: '07:30', title: 'Ăn sáng tại homestay', desc: 'Bánh cuốn Cao Bằng nóng hổi.' },
+              { time: '08:30', title: 'Khởi hành qua Trà Lĩnh', desc: 'Tuyến đường rừng xanh mát mát.' },
+              { time: '10:00', title: 'Khám phá Quần thể 36 hồ Thang Hen', desc: 'Ghé hồ chính Thang Hen xanh ngắt giữa thung lũng đá.', image: 'images/places/thang-hen.jpg' },
+              { time: '12:30', title: 'Cơm trưa dã ngoại thảo nguyên', desc: 'Ăn trưa dã ngoại do homestay chuẩn bị sẵn.' },
+              { time: '14:00', title: 'Check-in Núi Mắt Thần huyền ảo', desc: 'Dựng lều nghỉ ngơi, chụp hình cùng lỗ thủng độc đáo xuyên núi.', image: 'images/places/eye-mountain.jpg' },
+              { time: '17:30', title: 'Quay về Homestay Khuổi Ky', desc: 'Thư giãn ngâm chân lá thuốc Dao Đỏ.' },
+              { time: '19:00', title: 'Bữa tiệc BBQ nướng mắc mật', desc: 'Thịt lợn đen, lạp sườn nướng than hoa sực nức hương vị.' },
+              { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Ngủ sớm lấy sức, ngày mai chinh phục cung đèo 15 tầng huyền thoại.' }
+            ]
+          },
+          {
+            dayNumber: 3,
+            dayTitle: 'Đèo Khâu Cốc Chà 15 Tầng Dốc Hùng Vĩ',
+            activities: [
+              { time: '07:00', title: 'Check-out & Đi Bảo Lạc', desc: 'Khởi hành sớm chuẩn bị chinh phục cung đường huyền thoại.' },
+              { time: '09:30', title: 'Chinh phục đèo Khâu Cốc Chà 15 tầng dốc', desc: 'Cung đường đèo dốc uốn khúc tráng lệ nhất Việt Nam, leo lên chòi ngắm cảnh ngắm toàn bộ đèo.', image: 'images/places/khau-coc-cha.jpg' },
+              { time: '12:30', title: 'Ăn trưa tại Bảo Lạc', desc: 'Thịt khâu nhục, cá suối om dưa tại thị trấn Bảo Lạc.' },
+              { time: '14:30', title: 'Ghé bản người Lô Lô Chải đen', desc: 'Tìm hiểu phong tục, nét kiến trúc nhà trình tường đặc sắc.' },
+              { time: '17:30', title: 'Check-in Homestay tại Bảo Lạc', desc: 'Nhà sàn gỗ cổ ấm áp ven suối.' },
+              { time: '19:00', title: 'Bữa tối ẩm thực Lô Lô', desc: 'Thưởng thức rượu ngô và cơm bản địa.' },
+              { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Đêm Bảo Lạc tĩnh lặng, chỉ còn tiếng suối và bếp lửa tí tách.' }
+            ]
+          },
+          {
+            dayNumber: 4,
+            dayTitle: 'Suối Lê-nin, Pác Bó & Trở về',
+            activities: [
+              { time: '07:30', title: 'Ăn sáng & Đi Hà Quảng', desc: 'Khởi hành sớm quay lại Hà Quảng.' },
+              { time: '10:00', title: 'Khu di tích Pác Bó lịch sử', desc: 'Đi bộ ven suối Lê-nin xanh màu ngọc bích, thăm hang Cốc Bó mát lạnh.', image: 'images/places/pac-bo.jpg' },
+              { time: '12:30', title: 'Ăn trưa tại Tp. Cao Bằng', desc: 'Cơm gia đình Cao Bằng với khâu nhục và rau dớn rừng.' },
+              { time: '14:30', title: 'Trả xe máy & mua sắm quà đặc sản', desc: 'Mua chè Lam, hạt dẻ sấy dẻo Cao Bằng.' },
+              { time: '16:00', title: 'Cafe chill bên sông Bằng', desc: 'Thư giãn ngắm hoàng hôn đổ xuống thành phố Cao Bằng.' },
+              { time: '18:00', title: 'Bữa tối nhẹ phở chua địa phương', desc: 'Kết thúc hành trình bằng ẩm thực tinh túy.' },
+              { time: '20:30', title: 'Lên xe Limousine cabin VIP về Hà Nội', desc: 'Nằm ngủ êm ái trên cabin, xe trả khách tại Hà Nội lúc 04:30 sáng hôm sau.' }
+            ]
+          }
+        ],
       },
-      {
-        dayNumber: 2,
-        dayTitle: 'Hồ Thang Hen & Thảo Nguyên Núi Mắt Thần',
-        activities: [
-          { time: '07:30', title: 'Ăn sáng tại homestay', desc: 'Bánh cuốn Cao Bằng nóng hổi.' },
-          { time: '08:30', title: 'Khởi hành qua Trà Lĩnh', desc: 'Tuyến đường rừng xanh mát mát.' },
-          { time: '10:00', title: 'Khám phá Quần thể 36 hồ Thang Hen', desc: 'Ghé hồ chính Thang Hen xanh ngắt giữa thung lũng đá.', image: 'images/places/thang-hen.jpg' },
-          { time: '12:30', title: 'Cơm trưa dã ngoại thảo nguyên', desc: 'Ăn trưa dã ngoại do homestay chuẩn bị sẵn.' },
-          { time: '14:00', title: 'Check-in Núi Mắt Thần huyền ảo', desc: 'Dựng lều nghỉ ngơi, chụp hình cùng lỗ thủng độc đáo xuyên núi.', image: 'images/places/eye-mountain.jpg' },
-          { time: '17:30', title: 'Quay về Homestay Khuổi Ky', desc: 'Thư giãn ngâm chân lá thuốc Dao Đỏ.' },
-          { time: '19:00', title: 'Bữa tiệc BBQ nướng mắc mật', desc: 'Thịt lợn đen, lạp sườn nướng than hoa sực nức hương vị.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Ngủ sớm lấy sức, ngày mai chinh phục cung đèo 15 tầng huyền thoại.' }
-        ]
-      },
-      {
-        dayNumber: 3,
-        dayTitle: 'Đèo Khâu Cốc Chà 15 Tầng Dốc Hùng Vĩ',
-        activities: [
-          { time: '07:00', title: 'Check-out & Đi Bảo Lạc', desc: 'Khởi hành sớm chuẩn bị chinh phục cung đường huyền thoại.' },
-          { time: '09:30', title: 'Chinh phục đèo Khâu Cốc Chà 15 tầng dốc', desc: 'Cung đường đèo dốc uốn khúc tráng lệ nhất Việt Nam, leo lên chòi ngắm cảnh ngắm toàn bộ đèo.', image: 'images/places/khau-coc-cha.jpg' },
-          { time: '12:30', title: 'Ăn trưa tại Bảo Lạc', desc: 'Thịt khâu nhục, cá suối om dưa tại thị trấn Bảo Lạc.' },
-          { time: '14:30', title: 'Ghé bản người Lô Lô Chải đen', desc: 'Tìm hiểu phong tục, nét kiến trúc nhà trình tường đặc sắc.' },
-          { time: '17:30', title: 'Check-in Homestay tại Bảo Lạc', desc: 'Nhà sàn gỗ cổ ấm áp ven suối.' },
-          { time: '19:00', title: 'Bữa tối ẩm thực Lô Lô', desc: 'Thưởng thức rượu ngô và cơm bản địa.' },
-          { time: '21:00', title: 'Nghỉ ngơi tại homestay', desc: 'Đêm Bảo Lạc tĩnh lặng, chỉ còn tiếng suối và bếp lửa tí tách.' }
-        ]
-      },
-      {
-        dayNumber: 4,
-        dayTitle: 'Suối Lê-nin, Pác Bó & Trở về',
-        activities: [
-          { time: '07:30', title: 'Ăn sáng & Đi Hà Quảng', desc: 'Khởi hành sớm quay lại Hà Quảng.' },
-          { time: '10:00', title: 'Khu di tích Pác Bó lịch sử', desc: 'Đi bộ ven suối Lê-nin xanh màu ngọc bích, thăm hang Cốc Bó mát lạnh.', image: 'images/places/pac-bo.jpg' },
-          { time: '12:30', title: 'Ăn trưa tại Tp. Cao Bằng', desc: 'Cơm gia đình Cao Bằng với khâu nhục và rau dớn rừng.' },
-          { time: '14:30', title: 'Trả xe máy & mua sắm quà đặc sản', desc: 'Mua chè Lam, hạt dẻ sấy dẻo Cao Bằng.' },
-          { time: '16:00', title: 'Cafe chill bên sông Bằng', desc: 'Thư giãn ngắm hoàng hôn đổ xuống thành phố Cao Bằng.' },
-          { time: '18:00', title: 'Bữa tối nhẹ phở chua địa phương', desc: 'Kết thúc hành trình bằng ẩm thực tinh túy.' },
-          { time: '20:30', title: 'Lên xe Limousine cabin VIP về Hà Nội', desc: 'Nằm ngủ êm ái trên cabin, xe trả khách tại Hà Nội lúc 04:30 sáng hôm sau.' }
-        ]
-      }
-    ]
+    ],
   }
 ];

@@ -13,6 +13,16 @@ export function getStaticPaths() {
 const { program } = Astro.props;
 const ZALO_LINK = 'https://zalo.me/0822946888';
 const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
+
+// Bản đồ hành trình = CAO BANG SUPER MAP nhúng iframe, deep-link đúng trip
+// của LỘ TRÌNH đang chọn (?trip=&day=&embed). Đổi lộ trình → postMessage
+// cbmap-trip; đổi ngày → cbmap-day. iframe load với lộ trình mặc định (đầu tiên).
+// LƯU Ý: public/map/ là bản copy tạm (gitignored) — trên GitHub Pages hiện
+// chưa có /map/; hoạt động đầy đủ khi ghép vào web chính (map thật ở đó).
+const defaultOpt = program.itineraryOptions[0];
+const MAP_EMBED_URL = defaultOpt.mapTripId
+  ? `${base}map/index.html?trip=${defaultOpt.mapTripId}${defaultOpt.mapTripDayMap ? `&day=${defaultOpt.mapTripDayMap[0]}` : ''}&embed`
+  : null;
 ---
 
 <Base
@@ -282,9 +292,56 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
       <p class="section-sub">Sen sắp theo cung đường thực tế, để bạn đi vừa kịp vừa thong thả.</p>
     </div>
 
+    <!-- Chọn lộ trình: mỗi combo có thể có 2 kiểu đi cho khách chọn -->
+    {program.itineraryOptions.length > 1 && (
+      <div class="itin-options" role="tablist" aria-label="Chọn lộ trình">
+        {program.itineraryOptions.map((itOpt, i) => (
+          <button class={`itin-opt ${i === 0 ? 'active' : ''}`} data-opt={itOpt.key} role="tab" aria-selected={i === 0 ? 'true' : 'false'}>
+            <strong>{itOpt.label}</strong>
+            <span>{itOpt.sub}</span>
+          </button>
+        ))}
+      </div>
+    )}
+
+    <!-- Bản đồ hành trình: SUPER MAP nhúng, route thật theo lộ trình + ngày đang chọn -->
+    {MAP_EMBED_URL && (
+      <div class="route-map reveal">
+        <div class="map-embed">
+          <iframe
+            id="tripMapFrame"
+            src={MAP_EMBED_URL}
+            title="Bản đồ hành trình Cao Bằng — đường đi thật từng ngày"
+            loading="lazy"
+            allow="geolocation"
+          ></iframe>
+          <button class="map-embed-scrim" id="tripMapScrim" type="button" aria-label="Kích hoạt tương tác với bản đồ">
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg>
+              Chạm để khám phá bản đồ
+            </span>
+          </button>
+        </div>
+        <div class="rm-open-wrap">
+          <a class="rm-open-map" id="mapFullLink" data-base={`${base}map/index.html?trip=`} href={`${base}map/index.html?trip=${defaultOpt.mapTripId}`} target="_blank" rel="noopener">
+            Mở toàn màn hình — đủ {program.days} ngày &amp; ảnh từng điểm
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+    )}
+
+    <!-- Mỗi lộ trình: bộ day-tabs + timeline riêng -->
+    {program.itineraryOptions.map((itOpt, optIdx) => (
+    <div
+      class={`itin-option ${optIdx === 0 ? 'active' : ''}`}
+      data-opt={itOpt.key}
+      data-trip={itOpt.mapTripId}
+      data-day-map={itOpt.mapTripDayMap ? JSON.stringify(itOpt.mapTripDayMap) : undefined}
+    >
     <!-- Day Selector Tabs -->
     <div class="day-tabs">
-      {program.itinerary.map((day, index) => (
+      {itOpt.itinerary.map((day, index) => (
         <button class={`day-tab ${index === 0 ? 'active' : ''}`} data-day={day.dayNumber}>
           <strong>Ngày {day.dayNumber}</strong>
           <span>{day.dayTitle}</span>
@@ -294,15 +351,15 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 
     <!-- Daily Timelines -->
     <div class="daily-timelines">
-      {program.itinerary.map((day, dayIdx) => (
-        <div class={`daily-timeline ${dayIdx === 0 ? 'active' : ''}`} id={`timeline-day-${day.dayNumber}`}>
+      {itOpt.itinerary.map((day, dayIdx) => (
+        <div class={`daily-timeline ${dayIdx === 0 ? 'active' : ''}`} data-day={day.dayNumber}>
           <div class="timeline">
             <div class="timeline-line"></div>
             <div class="timeline-line-fill"></div>
             <div class="timeline-sun" aria-hidden="true">
               <svg class="sun-icon" viewBox="0 0 32 32">
                 <defs>
-                  <radialGradient id={`sunG${day.dayNumber}`} cx="50%" cy="42%" r="65%">
+                  <radialGradient id={`sunG${itOpt.key}${day.dayNumber}`} cx="50%" cy="42%" r="65%">
                     <stop offset="0%" stop-color="#FFE9A0" />
                     <stop offset="55%" stop-color="#F6B23F" />
                     <stop offset="100%" stop-color="#E58223" />
@@ -322,21 +379,21 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
                   <line x1="21" y1="7.34" x2="22.2" y2="5.26" />
                   <line x1="24.66" y1="11" x2="26.74" y2="9.8" />
                 </g>
-                <circle cx="16" cy="16" r="7" fill={`url(#sunG${day.dayNumber})`} />
+                <circle cx="16" cy="16" r="7" fill={`url(#sunG${itOpt.key}${day.dayNumber})`} />
               </svg>
               <svg class="moon-icon" viewBox="0 0 32 32">
                 <defs>
-                  <radialGradient id={`moonG${day.dayNumber}`} cx="40%" cy="35%" r="75%">
+                  <radialGradient id={`moonG${itOpt.key}${day.dayNumber}`} cx="40%" cy="35%" r="75%">
                     <stop offset="0%" stop-color="#FBF9EE" />
                     <stop offset="100%" stop-color="#D8D3EE" />
                   </radialGradient>
-                  <mask id={`moonM${day.dayNumber}`}>
+                  <mask id={`moonM${itOpt.key}${day.dayNumber}`}>
                     <rect width="32" height="32" fill="white" />
                     <circle cx="22.5" cy="10.5" r="8" fill="black" />
                   </mask>
                 </defs>
-                <g mask={`url(#moonM${day.dayNumber})`}>
-                  <circle cx="15" cy="17" r="9.5" fill={`url(#moonG${day.dayNumber})`} />
+                <g mask={`url(#moonM${itOpt.key}${day.dayNumber})`}>
+                  <circle cx="15" cy="17" r="9.5" fill={`url(#moonG${itOpt.key}${day.dayNumber})`} />
                   <circle cx="11.5" cy="15" r="1.7" fill="#C7C1E3" opacity="0.75" />
                   <circle cx="15" cy="21.5" r="1.2" fill="#C7C1E3" opacity="0.6" />
                   <circle cx="9.5" cy="20" r="0.9" fill="#C7C1E3" opacity="0.55" />
@@ -420,6 +477,8 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
         </div>
       ))}
     </div>
+    </div>
+    ))}
   </div>
 </section>
 
@@ -758,6 +817,43 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   position: relative;
   z-index: var(--z-base);
 }
+/* ── Switcher lộ trình (Option 1/2) — cấp chọn cao hơn day-tabs ── */
+.itin-options {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-block: var(--space-lg) var(--space-md);
+  flex-wrap: wrap;
+}
+.itin-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+  padding: 14px 22px;
+  max-width: 320px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-out);
+}
+.itin-opt:hover { border-color: var(--accent); }
+.itin-opt.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.itin-opt strong { font-size: var(--text-base); }
+.itin-opt span { font-size: var(--text-xs); opacity: 0.85; }
+.itin-option { display: none; }
+.itin-option.active { display: block; }
+@media (max-width: 600px) {
+  .itin-options { gap: 8px; }
+  .itin-opt { padding: 11px 14px; max-width: 100%; width: 100%; align-items: center; text-align: center; }
+}
+
 .day-tabs {
   display: flex;
   justify-content: center;
@@ -801,6 +897,80 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
 }
 .daily-timeline.active {
   display: block;
+}
+
+/* ── Bản đồ hành trình: SUPER MAP nhúng iframe, khung giấy trên nền trời ── */
+.route-map {
+  max-width: 860px;
+  margin: 0 auto var(--space-xl);
+}
+.map-embed {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 10px 30px rgba(46, 38, 30, 0.12);
+}
+.map-embed iframe {
+  display: block;
+  width: 100%;
+  height: 480px;
+  border: 0;
+}
+/* Màn chắn: để cuộn trang không bị bản đồ "nuốt" — chạm 1 lần mới tương tác */
+.map-embed-scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  padding: 16px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-embed-scrim span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(46, 38, 30, 0.15);
+  backdrop-filter: blur(3px);
+}
+.map-embed-scrim.off { display: none; }
+/* Nút mở CAO BANG SUPER MAP toàn màn hình (deep-link ?trip=<id>) */
+.rm-open-wrap {
+  text-align: center;
+  margin-top: var(--space-sm);
+}
+.rm-open-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+.rm-open-map:hover {
+  border-color: var(--accent);
+}
+@media (max-width: 600px) {
+  .route-map { margin-bottom: var(--space-lg); }
+  .map-embed iframe { height: 390px; }
 }
 /* ── Timeline: mobile = 1 cột line trái; desktop = line giữa, card so le ── */
 .timeline {
@@ -1422,24 +1592,68 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
     });
   });
 
-  // Day Timeline Switcher
-  const dayTabs = document.querySelectorAll('.day-tab');
-  const timelines = document.querySelectorAll('.daily-timeline');
+  // ── Lộ trình (option) + Day switcher, đồng bộ bản đồ nhúng ──
+  const tripMapFrame = document.getElementById('tripMapFrame');
+  const mapFullLink = document.getElementById('mapFullLink');
+  const optTabs = document.querySelectorAll('.itin-opt');
+  const optWraps = document.querySelectorAll('.itin-option');
 
-  dayTabs.forEach(tab => {
+  function wrapDayMap(wrap) {
+    try { return JSON.parse(wrap?.dataset.dayMap || 'null'); } catch { return null; }
+  }
+  function postToMap(msg) {
+    tripMapFrame?.contentWindow?.postMessage(msg, window.location.origin);
+  }
+  // Đồng bộ map theo lộ trình + ngày đang chọn (gọi khi iframe load / đổi lộ trình)
+  function syncMap() {
+    const wrap = document.querySelector('.itin-option.active');
+    const trip = wrap?.dataset.trip;
+    if (!trip || !tripMapFrame) return;
+    const dayMap = wrapDayMap(wrap);
+    const dayNum = Number(wrap.querySelector('.day-tab.active')?.getAttribute('data-day') || 1);
+    postToMap({ type: 'cbmap-trip', trip, day: dayMap ? dayMap[dayNum - 1] : undefined });
+    if (mapFullLink) mapFullLink.href = mapFullLink.dataset.base + trip;
+  }
+  // iframe load chậm hơn thao tác đầu tiên → load xong đồng bộ lại
+  tripMapFrame?.addEventListener('load', syncMap);
+
+  // Màn chắn chống "nuốt" cuộn trang — chạm 1 lần để tương tác với bản đồ
+  const tripMapScrim = document.getElementById('tripMapScrim');
+  tripMapScrim?.addEventListener('click', () => tripMapScrim.classList.add('off'));
+
+  // Đổi lộ trình: đổi wrapper (day-tabs + timeline) + đổi trip trên map
+  optTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      // Deactivate all day tabs & timelines
-      dayTabs.forEach(t => t.classList.remove('active'));
-      timelines.forEach(tl => tl.classList.remove('active'));
-
-      // Activate clicked tab & timeline
+      optTabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
       tab.classList.add('active');
-      const dayNum = tab.getAttribute('data-day');
-      const targetTimeline = document.getElementById(`timeline-day-${dayNum}`);
-      targetTimeline?.classList.add('active');
-
-      // Scroll reveal trigger check
+      tab.setAttribute('aria-selected', 'true');
+      const key = tab.getAttribute('data-opt');
+      optWraps.forEach(w => w.classList.toggle('active', w.getAttribute('data-opt') === key));
+      syncMap();
       window.dispatchEvent(new Event('scroll'));
+    });
+  });
+
+  // Đổi ngày TRONG một lộ trình: tabs/timelines chỉ tác động nội bộ wrapper đó
+  optWraps.forEach(wrap => {
+    const dayTabs = wrap.querySelectorAll('.day-tab');
+    const timelines = wrap.querySelectorAll('.daily-timeline');
+    dayTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        dayTabs.forEach(t => t.classList.remove('active'));
+        timelines.forEach(tl => tl.classList.remove('active'));
+        tab.classList.add('active');
+        const dayNum = tab.getAttribute('data-day');
+        wrap.querySelector(`.daily-timeline[data-day="${dayNum}"]`)?.classList.add('active');
+
+        // Bản đồ nhúng nhảy theo ngày
+        const dayMap = wrapDayMap(wrap);
+        const tripDay = dayMap ? dayMap[Number(dayNum) - 1] : undefined;
+        if (wrap.dataset.trip && tripDay) postToMap({ type: 'cbmap-day', day: tripDay });
+
+        // Scroll reveal trigger check
+        window.dispatchEvent(new Event('scroll'));
+      });
     });
   });
 
@@ -1497,7 +1711,7 @@ const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL :
   let tlTicking = false;
   function updateTimelineSun() {
     tlTicking = false;
-    const tl = document.querySelector('.daily-timeline.active .timeline');
+    const tl = document.querySelector('.itin-option.active .daily-timeline.active .timeline');
     if (!tl) return;
     const sunEl = tl.querySelector('.timeline-sun');
     if (prefersReduced.matches) {
