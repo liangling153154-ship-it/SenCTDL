@@ -23,3 +23,6 @@ node_modules
 
 # Verification screenshots (transient artifacts, regenerated each session)
 sessions/screenshots/
+
+# Gói HTML build (pha 1 chuyển sang web chính) — không commit, build lại khi cần
+export-html/

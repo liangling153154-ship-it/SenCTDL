@@ -203,7 +203,7 @@ const gallery = [
     </div>
     <div class="programs-grid">
       {programs.map((p, i) => (
-        <a href={`${base}programs/${p.id}/`} class={`program-card reveal ${p.featured ? 'program-featured' : ''}`} style={`--i: ${i}`}>
+        <a href={`${base}programs/${p.id}.html`} class={`program-card reveal ${p.featured ? 'program-featured' : ''}`} style={`--i: ${i}`}>
           {p.featured && <div class="program-badge">Được chọn nhiều nhất</div>}
           <div class="program-img-wrapper">
             <img src={p.image} alt={p.name} class="program-img" loading="lazy" />
